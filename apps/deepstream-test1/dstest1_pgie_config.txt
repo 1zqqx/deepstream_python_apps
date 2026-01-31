@@ -14,7 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ################################################################################
-
+# ==============================================================================
+# nvinfer 推理插件配置文件（Primary GIE 主推理引擎）
+# ==============================================================================
+# 本文件由 nvinfer 插件读取，用于配置 TensorRT 目标检测模型。
+# 使用的模型：resnet18_trafficcamnet（交通场景检测，可识别车辆/自行车/行人/交通标志）
+#
+# 配置文件结构：
+#   [property]       - 模型路径、GPU、精度、批大小等
+#   [class-attrs-*]  - 每类或全部类别的后处理参数（阈值、NMS 等）
+#
+# 【以下为 NVIDIA 文档中的属性说明，供参考】
 # Following properties are mandatory when engine files are not specified:
 #   int8-calib-file(Only in INT8)
 #   Caffemodel mandatory properties: model-file, proto-file, output-blob-names
@@ -52,23 +62,63 @@
 # The values in the config file are overridden by values set through GObject
 # properties.
 
+# ==============================================================================
+# [property] 主要配置节
+# ==============================================================================
 [property]
+# 使用的 GPU 编号，多卡时可用 0、1、2...
 gpu-id=0
+
+# 输入像素的缩放因子，用于归一化
+# 0.00392156862745098 ≈ 1/255，将 [0,255] 缩放到 [0,1]
 net-scale-factor=0.00392156862745098
-onnx-file=../../../../samples/models/Primary_Detector/resnet18_trafficcamnet_pruned.onnx
-model-engine-file=../../../../samples/models/Primary_Detector/resnet18_trafficcamnet_pruned.onnx_b1_gpu0_fp16.engine
-labelfile-path=../../../../samples/models/Primary_Detector/labels.txt
-int8-calib-file=../../../../samples/models/Primary_Detector/cal_trt.bin
+
+# ONNX 模型文件路径（首次运行会由此生成 TensorRT engine）
+onnx-file=/home/good/wkspace/deepstream-sdk/ds8samples/models/Primary_Detector/resnet18_trafficcamnet_pruned.onnx
+
+# TensorRT 序列化后的 engine 文件（加速启动，若不存在会自动生成）
+# 命名通常为 模型名_batch_gpu0_精度.engine
+model-engine-file=/home/good/wkspace/deepstream-sdk/ds8samples/models/Primary_Detector/resnet18_trafficcamnet_pruned.onnx_batch1_gpu0_fp16.engine
+
+# 类别标签文件，每行一个类别，顺序对应 class_id 0、1、2、3...
+labelfile-path=/home/good/wkspace/deepstream-sdk/ds8samples/models/Primary_Detector/labels.txt
+
+# INT8 量化时的校准文件（仅 network-mode=1 时使用，本示例用 FP16 可不关心）
+int8-calib-file=/home/good/wkspace/deepstream-sdk/ds8samples/models/Primary_Detector/cal_trt.bin
+
+# 批大小，需与 streammux 的 batch-size 一致
+# 一路视频 此处 与 streammux 一致 为 1
 batch-size=1
+
+# 推理精度：0=FP32, 1=INT8, 2=FP16
 network-mode=2
+
+# 检测类别数量（Vehicle/Bicycle/Person/RoadSign 共 4 类）
 num-detected-classes=4
+
+# Primary 模式下的推理间隔，0 表示每帧都推理
 interval=0
+
+# 推理引擎唯一 ID，用于多 GIE 时区分
 gie-unique-id=1
+
+# 缩放过滤器和硬件（通常使用默认即可）
 #scaling-filter=0
 #scaling-compute-hw=0
+
+# 检测框聚类/合并模式：2 表示 DBSCAN 聚类
+# 用于将重叠的候选框合并为最终检测框
 cluster-mode=2
 
+# ==============================================================================
+# [class-attrs-all] 类别相关属性（对所有类别生效）
+# ==============================================================================
 [class-attrs-all]
+# 聚类前的置信度阈值，低于此值的检测会被过滤
 pre-cluster-threshold=0.2
+
+# 每个类保留的最大检测框数量（按置信度排序取 top-k）
 topk=20
+
+# NMS（非极大值抑制）的 IoU 阈值，重叠度高于此值的框会被抑制
 nms-iou-threshold=0.5
