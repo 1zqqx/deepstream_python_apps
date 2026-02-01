@@ -1,0 +1,193 @@
+Factory Details:
+  Rank                     primary (256)
+  Long-name                Stream multiplexer
+  Klass                    Generic
+  Description              N-to-1 pipe stream multiplexing
+  Author                   NVIDIA Corporation. Post on Deepstream for Tesla forum for any queries @ https://devtalk.nvidia.com/default/board/209/
+
+Plugin Details:
+  Name                     nvdsgst_multistream
+  Description              NVIDIA Multistream mux/demux plugin
+  Filename                 /usr/lib/x86_64-linux-gnu/gstreamer-1.0/deepstream/libnvdsgst_multistream.so
+  Version                  8.0.0
+  License                  Proprietary
+  Source module            nvmultistream
+  Binary package           NVIDIA Multistream Plugins
+  Origin URL               http://nvidia.com/
+
+GObject
+ +----GInitiallyUnowned
+       +----GstObject
+             +----GstElement
+                   +----GstNvStreamMux
+
+Pad Templates:
+  SINK template: 'sink_%u'
+    Availability: On request
+    Capabilities:
+      video/x-raw(memory:NVMM)
+                 format: { (string)NV12, (string)RGBA, (string)I420 }
+                  width: [ 1, 2147483647 ]
+                 height: [ 1, 2147483647 ]
+              framerate: [ 0/1, 2147483647/1 ]
+  
+  SRC template: 'src'
+    Availability: Always
+    Capabilities:
+      video/x-raw(memory:NVMM)
+                 format: { (string)NV12, (string)RGBA, (string)I420 }
+                  width: [ 1, 2147483647 ]
+                 height: [ 1, 2147483647 ]
+              framerate: [ 0/1, 2147483647/1 ]
+
+Element has no clocking capabilities.
+Element has no URI handling capabilities.
+
+Pads:
+  SRC: 'src'
+    Pad Template: 'src'
+
+Element Properties:
+
+  align-first-buffer  : Align only the first buffer of all sources within frame rate range
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  align-inputs        : Boolean property to force timestamp align of input frames.
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  async-process       : Boolean property to enable/disable asynchronous processing of input frames for performance.
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
+  attach-sys-ts       : If set to TRUE, system timestamp will be attached as ntp timestamp.
+			If set to FALSE, ntp timestamp from rtspsrc, if available, will be attached.
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
+  batch-size          : Maximum number of buffers in a batch
+                        flags: 可读, 可写
+                        Unsigned Integer. Range: 0 - 1024 Default: 0 
+  
+  batched-push-timeout: Timeout in microseconds to wait after the first buffer is available
+			to push the batch even if the complete batch is not formed.
+			Set to -1 to wait infinitely
+                        flags: 可读, 可写
+                        Integer. Range: -1 - 2147483647 Default: -1 
+  
+  buffer-pool-size    : Maximum number of buffers from muxer's output pool
+                        flags: 可读, 可写
+                        Unsigned Integer. Range: 4 - 1024 Default: 4 
+  
+  cache-buffer        : Render previous frame in case new frame is delayed
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  cache-buffer-timeout: Timeout in microseconds to reuse previous rendered buffer
+			Post timeout and when no initial buffer available , grey image to be rendered
+			Set to -1 to wait infinitely
+                        flags: 可读, 可写
+                        Integer. Range: -1 - 2147483647 Default: -1 
+  
+  compute-hw          : Compute Scaling HW
+                        flags: 可读, 可写, 可控制
+                        Enum "GstNvComputeHWType" Default: 0, "Default"
+                           (0): Default          - Default, GPU for Tesla, VIC for Jetson
+                           (1): GPU              - GPU
+                           (2): VIC              - VIC
+  
+  drop-pipeline-eos   : Boolean property so that EOS is not propagated downstream when all the sink pads are at EOS. (Experimental)
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  enable-padding      : Maintain input aspect ratio when scaling by padding with black bands.
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  extract-sei-sim-time: Set to extract and attach simulation time on output buffer
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  extract-sei-type5-data: Set to extract and attach SEI type5 unregistered data on output buffer, for debugging purpose
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  frame-duration      : Duration of input frames in milliseconds for use in NTP timestamp correction based on frame rate.
+			If set to 0, frame duration is inferred automatically from PTS values.
+			If set to -1, disables frame rate based NTP timestamp correction. (default)
+                        flags: 可读, 可写
+                        Unsigned Integer64. Range: 0 - 18446744073709551615 Default: 18446744073709 
+  
+  frame-num-reset-on-eos: Reset frame numbers to 0 for a source from which EOS is received (For debugging purpose only)
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  frame-num-reset-on-stream-reset: Reset frame numbers to 0 for a source which needs to be reset. (For debugging purpose only)
+Needs to be paired with tracking-id-reset-mode=1 in the tracker config.
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  gpu-id              : Set GPU Device ID
+                        flags: 可读, 可写
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 0 
+  
+  height              : Height of each frame in output batched buffer. This property MUST be set.
+                        flags: 可读, 可写
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 0 
+  
+  interpolation-method: Set interpolation methods
+                        flags: 可读, 可写, 可控制
+                        Enum "GstNvInterpolationMethod" Default: 1, "Bilinear"
+                           (0): Nearest          - Nearest
+                           (1): Bilinear         - Bilinear
+                           (2): Algo-1           - GPU - Cubic, VIC - 5 Tap
+                           (3): Algo-2           - GPU - Super, VIC - 10 Tap
+                           (4): Algo-3           - GPU - LanzoS, VIC - Smart
+                           (5): Algo-4           - GPU - Ignored, VIC - Nicest
+                           (6): Default          - GPU - Nearest, VIC - Nearest
+  
+  live-source         : Boolean property to inform muxer that sources are live.
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  max-latency         : Additional latency in live mode to allow upstream to take longer to produce buffers for the current position (in nanoseconds)
+                        flags: 可读, 可写
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 0 
+  
+  name                : The name of the object
+                        flags: 可读, 可写
+                        String. Default: "nvstreammux0"
+  
+  num-surfaces-per-frame: Max number of surfaces per frame
+                        flags: 可读, 可写
+                        Unsigned Integer. Range: 1 - 4 Default: 1 
+  
+  nvbuf-memory-type   : Type of NvBufSurface Memory to be allocated for output buffers
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Enum "GstNvBufMemoryType" Default: 2, "nvbuf-mem-cuda-device"
+                           (0): nvbuf-mem-default - Default memory allocated, specific to particular platform
+                           (1): nvbuf-mem-cuda-pinned - Allocate Pinned/Host cuda memory
+                           (2): nvbuf-mem-cuda-device - Allocate Device cuda memory
+                           (3): nvbuf-mem-cuda-unified - Allocate Unified cuda memory
+  
+  parent              : The parent of the object
+                        flags: 可读, 可写
+                        Object of type "GstObject"
+  
+  sort-batch          : Sort Batch Buffer in ascending order of pad-ids
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  sync-inputs         : Boolean property to force sychronization of input frames.
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  sync-inputs-ntp     : Time in nanoseconds to synchronize incoming inputs based on ntp
+                        flags: 可读, 可写
+                        Integer. Range: 0 - 2147483647 Default: 0 
+  
+  width               : Width of each frame in output batched buffer. This property MUST be set.
+                        flags: 可读, 可写
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 0 
+  

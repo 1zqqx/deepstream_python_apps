@@ -1,0 +1,229 @@
+Factory Details:
+  Rank                     none (0)
+  Long-name                UDP packet sender
+  Klass                    Sink/Network
+  Description              Send data over the network via UDP
+  Author                   Wim Taymans <wim@fluendo.com>
+  Documentation            https://gstreamer.freedesktop.org/documentation/udp/udpsink.html
+
+Plugin Details:
+  Name                     udp
+  Description              transfer data via UDP
+  Filename                 /usr/lib/x86_64-linux-gnu/gstreamer-1.0/libgstudp.so
+  Version                  1.24.2
+  License                  LGPL
+  Source module            gst-plugins-good
+  Documentation            https://gstreamer.freedesktop.org/documentation/udp/
+  Source release date      2024-04-09
+  Binary package           GStreamer Good Plugins (Ubuntu)
+  Origin URL               https://launchpad.net/ubuntu/+source/gst-plugins-good1.0
+
+GObject
+ +----GInitiallyUnowned
+       +----GstObject
+             +----GstElement
+                   +----GstBaseSink
+                         +----GstMultiUDPSink
+                               +----GstUDPSink
+
+实现的接口:
+  GstURIHandler
+
+Pad Templates:
+  SINK template: 'sink'
+    Availability: Always
+    Capabilities:
+      ANY
+
+Element has no clocking capabilities.
+
+URI handling capabilities:
+  Element can act as sink.
+  Supported URI protocols:
+    udp
+
+Pads:
+  SINK: 'sink'
+    Pad Template: 'sink'
+
+Element Properties:
+
+  async               : Go asynchronously to PAUSED
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
+  auto-multicast      : Automatically join/leave the multicast groups, FALSE means user has to do it himself
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
+  bind-address        : Address to bind the socket to
+                        flags: 可读, 可写
+                        String. Default: null
+  
+  bind-port           : Port to bind the socket to
+                        flags: 可读, 可写
+                        Integer. Range: 0 - 65535 Default: 0 
+  
+  blocksize           : Size in bytes to pull per buffer (0 = default)
+                        flags: 可读, 可写
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 4096 
+  
+  buffer-size         : Size of the kernel send buffer in bytes, 0=default
+                        flags: 可读, 可写
+                        Integer. Range: 0 - 2147483647 Default: 0 
+  
+  bytes-served        : Total number of bytes sent to all clients
+                        flags: 可读
+                        Unsigned Integer64. Range: 0 - 18446744073709551615 Default: 0 
+  
+  bytes-to-serve      : Number of bytes received to serve to clients
+                        flags: 可读
+                        Unsigned Integer64. Range: 0 - 18446744073709551615 Default: 0 
+  
+  clients             : A comma separated list of host:port pairs with destinations
+                        flags: 可读, 可写
+                        String. Default: "localhost:5004"
+  
+  close-socket        : Close socket if passed as property on state change
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
+  enable-last-sample  : Enable the last-sample property
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
+  force-ipv4          : Forcing the use of an IPv4 socket (DEPRECATED, has no effect anymore)
+                        flags: 可读, 可写, 已废弃
+                        Boolean. Default: false
+  
+  host                : The host/IP/Multicast group to send the packets to
+                        flags: 可读, 可写
+                        String. Default: "localhost"
+  
+  last-sample         : The last sample received in the sink
+                        flags: 可读
+                        Boxed pointer of type "GstSample"
+  
+  loop                : Used for setting the multicast loop parameter. TRUE = enable, FALSE = disable
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
+  max-bitrate         : The maximum bits per second to render (0 = disabled)
+                        flags: 可读, 可写
+                        Unsigned Integer64. Range: 0 - 18446744073709551615 Default: 0 
+  
+  max-lateness        : Maximum number of nanoseconds that a buffer can be late before it is dropped (-1 unlimited)
+                        flags: 可读, 可写
+                        Integer64. Range: -1 - 9223372036854775807 Default: -1 
+  
+  multicast-iface     : The network interface on which to join the multicast group
+                        flags: 可读, 可写
+                        String. Default: null
+  
+  name                : The name of the object
+                        flags: 可读, 可写
+                        String. Default: "udpsink0"
+  
+  parent              : The parent of the object
+                        flags: 可读, 可写
+                        Object of type "GstObject"
+  
+  port                : The port to send the packets to
+                        flags: 可读, 可写
+                        Integer. Range: 0 - 65535 Default: 5004 
+  
+  processing-deadline : Maximum processing time for a buffer in nanoseconds
+                        flags: 可读, 可写
+                        Unsigned Integer64. Range: 0 - 18446744073709551615 Default: 20000000 
+  
+  qos                 : Generate Quality-of-Service events upstream
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  qos-dscp            : Quality of Service, differentiated services code point (-1 default)
+                        flags: 可读, 可写
+                        Integer. Range: -1 - 63 Default: -1 
+  
+  render-delay        : Additional render delay of the sink in nanoseconds
+                        flags: 可读, 可写
+                        Unsigned Integer64. Range: 0 - 18446744073709551615 Default: 0 
+  
+  send-duplicates     : When a destination/port pair is added multiple times, send packets multiple times as well
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
+  socket              : Socket to use for UDP sending. (NULL == allocate)
+                        flags: 可读, 可写
+                        Object of type "GSocket"
+  
+  socket-v6           : Socket to use for UDPv6 sending. (NULL == allocate)
+                        flags: 可读, 可写
+                        Object of type "GSocket"
+  
+  stats               : Sink Statistics
+                        flags: 可读
+                        Boxed pointer of type "GstStructure"
+                                                        average-rate: 0
+                                                             dropped: 0
+                                                            rendered: 0
+
+  
+  sync                : Sync on the clock
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
+  throttle-time       : The time to keep between rendered buffers (0 = disabled)
+                        flags: 可读, 可写
+                        Unsigned Integer64. Range: 0 - 18446744073709551615 Default: 0 
+  
+  ts-offset           : Timestamp offset in nanoseconds
+                        flags: 可读, 可写
+                        Integer64. Range: -9223372036854775808 - 9223372036854775807 Default: 0 
+  
+  ttl                 : Used for setting the unicast TTL parameter
+                        flags: 可读, 可写
+                        Integer. Range: 0 - 255 Default: 64 
+  
+  ttl-mc              : Used for setting the multicast TTL parameter
+                        flags: 可读, 可写
+                        Integer. Range: 0 - 255 Default: 1 
+  
+  used-socket         : Socket currently in use for UDP sending. (NULL == no socket)
+                        flags: 可读
+                        Object of type "GSocket"
+  
+  used-socket-v6      : Socket currently in use for UDPv6 sending. (NULL == no socket)
+                        flags: 可读
+                        Object of type "GSocket"
+  
+
+Element Signals:
+
+  "client-added" :  void user_function (GstElement * object,
+                                        const gchar * arg0,
+                                        gint arg1,
+                                        gpointer user_data);
+
+  "client-removed" :  void user_function (GstElement * object,
+                                          const gchar * arg0,
+                                          gint arg1,
+                                          gpointer user_data);
+
+
+Element Actions:
+
+  "add" -> void  :  g_signal_emit_by_name (element, "add",
+                                           const gchar * arg0,
+                                           gint arg1);
+
+  "remove" -> void  :  g_signal_emit_by_name (element, "remove",
+                                              const gchar * arg0,
+                                              gint arg1);
+
+  "clear" -> void  :  g_signal_emit_by_name (element, "clear");
+
+  "get-stats" -> GstStructure  * :  g_signal_emit_by_name (element, "get-stats",
+                                                           const gchar * arg0,
+                                                           gint arg1,
+                                                           GstStructure * * p_return_value);
+

@@ -1,0 +1,68 @@
+Factory Details:
+  Rank                     secondary (128)
+  Long-name                H.265 parser
+  Klass                    Codec/Parser/Converter/Video
+  Description              Parses H.265 streams
+  Author                   Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+  Documentation            https://gstreamer.freedesktop.org/documentation/videoparsersbad/h265parse.html
+
+Plugin Details:
+  Name                     videoparsersbad
+  Description              videoparsers
+  Filename                 /usr/lib/x86_64-linux-gnu/gstreamer-1.0/libgstvideoparsersbad.so
+  Version                  1.24.2
+  License                  LGPL
+  Source module            gst-plugins-bad
+  Documentation            https://gstreamer.freedesktop.org/documentation/videoparsersbad/
+  Source release date      2024-04-09
+  Binary package           GStreamer Bad Plugins (Ubuntu)
+  Origin URL               https://launchpad.net/ubuntu/+source/gst-plugins-bad1.0
+
+GObject
+ +----GInitiallyUnowned
+       +----GstObject
+             +----GstElement
+                   +----GstBaseParse
+                         +----GstH265Parse
+
+Pad Templates:
+  SINK template: 'sink'
+    Availability: Always
+    Capabilities:
+      video/x-h265
+  
+  SRC template: 'src'
+    Availability: Always
+    Capabilities:
+      video/x-h265
+                 parsed: true
+          stream-format: { (string)hvc1, (string)hev1, (string)byte-stream }
+              alignment: { (string)au, (string)nal }
+
+Element has no clocking capabilities.
+Element has no URI handling capabilities.
+
+Pads:
+  SINK: 'sink'
+    Pad Template: 'sink'
+  SRC: 'src'
+    Pad Template: 'src'
+
+Element Properties:
+
+  config-interval     : Send VPS, SPS and PPS Insertion Interval in seconds (sprop parameter sets will be multiplexed in the data stream when detected.) (0 = disabled, -1 = send with every IDR frame)
+                        flags: 可读, 可写
+                        Integer. Range: -1 - 3600 Default: 0 
+  
+  disable-passthrough : Force processing (disables passthrough)
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  name                : The name of the object
+                        flags: 可读, 可写
+                        String. Default: "h265parse0"
+  
+  parent              : The parent of the object
+                        flags: 可读, 可写
+                        Object of type "GstObject"
+  

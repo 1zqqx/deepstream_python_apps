@@ -1,0 +1,287 @@
+Factory Details:
+  Rank                     primary (256)
+  Long-name                x264 H.264 Encoder
+  Klass                    Codec/Encoder/Video
+  Description              libx264-based H.264 video encoder
+  Author                   Josef Zlomek <josef.zlomek@itonis.tv>, Mark Nauwelaerts <mnauw@users.sf.net>
+  Documentation            https://gstreamer.freedesktop.org/documentation/x264/#x264enc-page
+
+Plugin Details:
+  Name                     x264
+  Description              libx264-based H.264 encoder plugin
+  Filename                 /usr/lib/x86_64-linux-gnu/gstreamer-1.0/libgstx264.so
+  Version                  1.24.1
+  License                  GPL
+  Source module            gst-plugins-ugly
+  Documentation            https://gstreamer.freedesktop.org/documentation/x264/
+  Source release date      2024-03-21
+  Binary package           GStreamer Ugly Plugins (Ubuntu)
+  Origin URL               https://launchpad.net/ubuntu/+source/gst-plugins-ugly1.0
+
+GObject
+ +----GInitiallyUnowned
+       +----GstObject
+             +----GstElement
+                   +----GstVideoEncoder
+                         +----GstX264Enc
+
+实现的接口:
+  GstPreset
+
+Pad Templates:
+  SINK template: 'sink'
+    Availability: Always
+    Capabilities:
+      video/x-raw
+              framerate: [ 0/1, 2147483647/1 ]
+                  width: [ 1, 2147483647 ]
+                 height: [ 1, 2147483647 ]
+                 format: { (string)Y444, (string)Y42B, (string)I420, (string)YV12, (string)NV12, (string)GRAY8, (string)Y444_10LE, (string)I422_10LE, (string)I420_10LE }
+  
+  SRC template: 'src'
+    Availability: Always
+    Capabilities:
+      video/x-h264
+              framerate: [ 0/1, 2147483647/1 ]
+                  width: [ 1, 2147483647 ]
+                 height: [ 1, 2147483647 ]
+          stream-format: { (string)avc, (string)byte-stream }
+              alignment: au
+                profile: { (string)high-4:4:4, (string)high-4:2:2, (string)high-10, (string)high, (string)main, (string)baseline, (string)constrained-baseline, (string)high-4:4:4-intra, (string)high-4:2:2-intra, (string)high-10-intra }
+
+Element has no clocking capabilities.
+Element has no URI handling capabilities.
+
+Pads:
+  SINK: 'sink'
+    Pad Template: 'sink'
+  SRC: 'src'
+    Pad Template: 'src'
+
+Element Properties:
+
+  analyse             : Partitions to consider
+                        flags: 可读, 可写
+                        Flags "GstX264EncAnalyse" Default: 0x00000000, "(none)"
+                           (0x00000001): i4x4             - i4x4
+                           (0x00000002): i8x8             - i8x8
+                           (0x00000010): p8x8             - p8x8
+                           (0x00000020): p4x4             - p4x4
+                           (0x00000100): b8x8             - b8x8
+  
+  aud                 : Use AU (Access Unit) delimiter
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
+  b-adapt             : Automatically decide how many B-frames to use
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
+  b-pyramid           : Keep some B-frames as references
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  bframes             : Number of B-frames between I and P
+                        flags: 可读, 可写
+                        Unsigned Integer. Range: 0 - 16 Default: 0 
+  
+  bitrate             : Bitrate in kbit/sec
+                        flags: 可读, 可写, 可以在NULL、READY、PAUSED或PLAYING状态下改变
+                        Unsigned Integer. Range: 1 - 2048000 Default: 2048 
+  
+  byte-stream         : Generate byte stream format of NALU
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  cabac               : Enable CABAC entropy coding
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
+  dct8x8              : Adaptive spatial transform size
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  frame-packing       : Set frame packing mode for Stereoscopic content
+                        flags: 可读, 可写
+                        Enum "GstX264EncFramePacking" Default: -1, "auto"
+                           (-1): auto             - Automatic (use incoming video information)
+                           (0): checkerboard     - checkerboard - Left and Right pixels alternate in a checkerboard pattern
+                           (1): column-interleaved - column interleaved - Alternating pixel columns represent Left and Right views
+                           (2): row-interleaved  - row interleaved - Alternating pixel rows represent Left and Right views
+                           (3): side-by-side     - side by side - The left half of the frame contains the Left eye view, the right half the Right eye view
+                           (4): top-bottom       - top bottom - L is on top, R on bottom
+                           (5): frame-interleaved - frame interleaved - Each frame contains either Left or Right view alternately
+  
+  insert-vui          : Insert VUI NAL in stream
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
+  interlaced          : Interlaced material
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  intra-refresh       : Use Periodic Intra Refresh instead of IDR frames
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  ip-factor           : Quantizer factor between I- and P-frames
+                        flags: 可读, 可写
+                        Float. Range:               0 -               2 Default:             1.4 
+  
+  key-int-max         : Maximal distance between two key-frames (0 for automatic)
+                        flags: 可读, 可写
+                        Unsigned Integer. Range: 0 - 2147483647 Default: 0 
+  
+  mb-tree             : Macroblock-Tree ratecontrol
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
+  me                  : Integer pixel motion estimation method
+                        flags: 可读, 可写
+                        Enum "GstX264EncMe" Default: 1, "hex"
+                           (0): dia              - dia
+                           (1): hex              - hex
+                           (2): umh              - umh
+                           (3): esa              - esa
+                           (4): tesa             - tesa
+  
+  min-force-key-unit-interval: Minimum interval between force-keyunit requests in nanoseconds
+                        flags: 可读, 可写
+                        Unsigned Integer64. Range: 0 - 18446744073709551615 Default: 0 
+  
+  multipass-cache-file: Filename for multipass cache file
+                        flags: 可读, 可写
+                        String. Default: "x264.log"
+  
+  name                : The name of the object
+                        flags: 可读, 可写
+                        String. Default: "x264enc0"
+  
+  noise-reduction     : Noise reduction strength
+                        flags: 可读, 可写
+                        Unsigned Integer. Range: 0 - 100000 Default: 0 
+  
+  option-string       : String of x264 options (overridden by element properties) in the format "key1=value1:key2=value2".
+                        flags: 可读, 可写
+                        String. Default: ""
+  
+  parent              : The parent of the object
+                        flags: 可读, 可写
+                        Object of type "GstObject"
+  
+  pass                : Encoding pass/type
+                        flags: 可读, 可写
+                        Enum "GstX264EncPass" Default: 0, "cbr"
+                           (0): cbr              - Constant Bitrate Encoding
+                           (4): quant            - Constant Quantizer
+                           (5): qual             - Constant Quality
+                           (17): pass1            - VBR Encoding - Pass 1
+                           (18): pass2            - VBR Encoding - Pass 2
+                           (19): pass3            - VBR Encoding - Pass 3
+  
+  pb-factor           : Quantizer factor between P- and B-frames
+                        flags: 可读, 可写
+                        Float. Range:               0 -               2 Default:             1.3 
+  
+  psy-tune            : Preset name for psychovisual tuning options
+                        flags: 可读, 可写
+                        Enum "GstX264EncPsyTune" Default: 0, "none"
+                           (0): none             - No tuning
+                           (1): film             - Film
+                           (2): animation        - Animation
+                           (3): grain            - Grain
+                           (4): psnr             - PSNR
+                           (5): ssim             - SSIM
+  
+  qos                 : Handle Quality-of-Service events from downstream
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  qp-max              : Maximum quantizer
+                        flags: 可读, 可写
+                        Unsigned Integer. Range: 0 - 63 Default: 51 
+  
+  qp-min              : Minimum quantizer
+                        flags: 可读, 可写
+                        Unsigned Integer. Range: 0 - 63 Default: 10 
+  
+  qp-step             : Maximum quantizer difference between frames
+                        flags: 可读, 可写
+                        Unsigned Integer. Range: 0 - 63 Default: 4 
+  
+  quantizer           : Constant quantizer or quality to apply
+                        flags: 可读, 可写
+                        Unsigned Integer. Range: 0 - 50 Default: 21 
+  
+  rc-lookahead        : Number of frames for frametype lookahead
+                        flags: 可读, 可写
+                        Integer. Range: 0 - 250 Default: 40 
+  
+  ref                 : Number of reference frames
+                        flags: 可读, 可写
+                        Unsigned Integer. Range: 1 - 16 Default: 3 
+  
+  sliced-threads      : Low latency but lower efficiency threading
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  speed-preset        : Preset name for speed/quality tradeoff options (can affect decode compatibility - impose restrictions separately for your target decoder)
+                        flags: 可读, 可写
+                        Enum "GstX264EncPreset" Default: 6, "medium"
+                           (0): None             - No preset
+                           (1): ultrafast        - ultrafast
+                           (2): superfast        - superfast
+                           (3): veryfast         - veryfast
+                           (4): faster           - faster
+                           (5): fast             - fast
+                           (6): medium           - medium
+                           (7): slow             - slow
+                           (8): slower           - slower
+                           (9): veryslow         - veryslow
+                           (10): placebo          - placebo
+  
+  sps-id              : SPS and PPS ID number
+                        flags: 可读, 可写
+                        Unsigned Integer. Range: 0 - 31 Default: 0 
+  
+  subme               : Subpixel motion estimation and partition decision quality: 1=fast, 10=best
+                        flags: 可读, 可写
+                        Unsigned Integer. Range: 1 - 10 Default: 1 
+  
+  sync-lookahead      : Number of buffer frames for threaded lookahead (-1 for automatic)
+                        flags: 可读, 可写
+                        Integer. Range: -1 - 250 Default: -1 
+  
+  threads             : Number of threads used by the codec (0 for automatic)
+                        flags: 可读, 可写
+                        Unsigned Integer. Range: 0 - 2147483647 Default: 0 
+  
+  trellis             : Enable trellis searched quantization
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
+  tune                : Preset name for non-psychovisual tuning options
+                        flags: 可读, 可写
+                        Flags "GstX264EncTune" Default: 0x00000000, "(none)"
+                           (0x00000001): stillimage       - Still image
+                           (0x00000002): fastdecode       - Fast decode
+                           (0x00000004): zerolatency      - Zero latency
+  
+  vbv-buf-capacity    : Size of the VBV buffer in milliseconds
+                        flags: 可读, 可写, 可以在NULL、READY、PAUSED或PLAYING状态下改变
+                        Unsigned Integer. Range: 0 - 10000 Default: 600 
+  
+  weightb             : Weighted prediction for B-frames
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+
+Presets:
+  "Profile Baseline": Baseline Profile
+  "Profile High": High Profile
+  "Profile Main": Main Profile
+  "Profile YouTube": YouTube recommended settings (https://support.google.com/youtube/answer/1722171)
+  "Quality High": High quality
+  "Quality Low": Low quality
+  "Quality Normal": Normal quality
+  "Zero Latency"

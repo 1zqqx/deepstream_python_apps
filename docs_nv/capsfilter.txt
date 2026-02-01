@@ -1,0 +1,72 @@
+Factory Details:
+  Rank                     none (0)
+  Long-name                CapsFilter
+  Klass                    Generic
+  Description              Pass data without modification, limiting formats
+  Author                   David Schleef <ds@schleef.org>
+  Documentation            https://gstreamer.freedesktop.org/documentation/coreelements/capsfilter.html
+
+Plugin Details:
+  Name                     coreelements
+  Description              GStreamer core elements
+  Filename                 /usr/lib/x86_64-linux-gnu/gstreamer-1.0/libgstcoreelements.so
+  Version                  1.24.2
+  License                  LGPL
+  Source module            gstreamer
+  Documentation            https://gstreamer.freedesktop.org/documentation/coreelements/
+  Source release date      2024-04-09
+  Binary package           GStreamer (Ubuntu)
+  Origin URL               https://launchpad.net/ubuntu/+source/gstreamer1.0
+
+GObject
+ +----GInitiallyUnowned
+       +----GstObject
+             +----GstElement
+                   +----GstBaseTransform
+                         +----GstCapsFilter
+
+Pad Templates:
+  SINK template: 'sink'
+    Availability: Always
+    Capabilities:
+      ANY
+  
+  SRC template: 'src'
+    Availability: Always
+    Capabilities:
+      ANY
+
+Element has no clocking capabilities.
+Element has no URI handling capabilities.
+
+Pads:
+  SINK: 'sink'
+    Pad Template: 'sink'
+  SRC: 'src'
+    Pad Template: 'src'
+
+Element Properties:
+
+  caps                : 限制所允许的功能 (NULL 表示无限制)。此属性可以为所提供的 GstCaps 对象设置一个关联应用。
+                        flags: 可读, 可写, 可以在NULL、READY、PAUSED或PLAYING状态下改变
+                                                   ANY
+
+  
+  caps-change-mode    : 过滤分析器变更行为
+                        flags: 可读, 可写, 可以在NULL、READY、PAUSED或PLAYING状态下改变
+                        Enum "GstCapsFilterCapsChangeMode" Default: 0, "immediate"
+                           (0): immediate        - Only accept the current filter caps
+                           (1): delayed          - Temporarily accept previous filter caps
+  
+  name                : The name of the object
+                        flags: 可读, 可写
+                        String. Default: "capsfilter0"
+  
+  parent              : The parent of the object
+                        flags: 可读, 可写
+                        Object of type "GstObject"
+  
+  qos                 : Handle Quality-of-Service events
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  

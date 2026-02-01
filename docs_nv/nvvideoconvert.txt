@@ -1,0 +1,159 @@
+Factory Details:
+  Rank                     primary (256)
+  Long-name                NvVidConv Plugin
+  Klass                    Filter/Converter/Video/Scaler
+  Description              Converts video from one colorspace to another & Resizes
+  Author                   NVIDIA Corporation. Post on Deepstream SDK forum for any queries @ https://devtalk.nvidia.com/default/board/209/
+
+Plugin Details:
+  Name                     nvvideoconvert
+  Description              video Colorspace conversion & scaler
+  Filename                 /usr/lib/x86_64-linux-gnu/gstreamer-1.0/deepstream/libgstnvvideoconvert.so
+  Version                  1.2.3
+  License                  Proprietary
+  Source module            nvvideoconvert
+  Binary package           GStreamer nvvideoconvert Plugin
+  Origin URL               http://nvidia.com/
+
+GObject
+ +----GInitiallyUnowned
+       +----GstObject
+             +----GstElement
+                   +----GstBaseTransform
+                         +----Gstnvvideoconvert
+
+Pad Templates:
+  SINK template: 'sink'
+    Availability: Always
+    Capabilities:
+      video/x-raw(memory:NVMM)
+                 format: { (string)I420, (string)NV12, (string)P010_10LE, (string)I420_12LE, (string)BGRx, (string)RGBA, (string)Y444, (string)Y444_10LE, (string)Y444_12LE, (string)GRAY8, (string)GRAY16_LE, (string)GBR, (string)RGB, (string)BGR, (string)BGR10A2_LE, (string)RGB10A2_LE, (string)UYVP, (string)UYVY, (string)BGRA64_LE }
+                  width: [ 1, 2147483647 ]
+                 height: [ 1, 2147483647 ]
+              framerate: [ 0/1, 2147483647/1 ]
+      video/x-raw
+                 format: { (string)I420, (string)NV12, (string)P010_10LE, (string)BGRx, (string)RGBA, (string)Y444, (string)GRAY8, (string)GRAY16_LE, (string)GBR, (string)RGB, (string)BGR, (string)BGR10A2_LE, (string)RGB10A2_LE, (string)UYVP, (string)UYVY, (string)BGRA64_LE }
+                  width: [ 1, 2147483647 ]
+                 height: [ 1, 2147483647 ]
+              framerate: [ 0/1, 2147483647/1 ]
+  
+  SRC template: 'src'
+    Availability: Always
+    Capabilities:
+      video/x-raw(memory:NVMM)
+                 format: { (string)I420, (string)NV12, (string)P010_10LE, (string)I420_12LE, (string)BGRx, (string)RGBA, (string)Y444, (string)Y444_10LE, (string)Y444_12LE, (string)GRAY8, (string)GRAY16_LE, (string)GBR, (string)RGB, (string)BGR, (string)BGR10A2_LE, (string)RGB10A2_LE, (string)UYVP, (string)UYVY, (string)BGRA64_LE }
+                  width: [ 1, 2147483647 ]
+                 height: [ 1, 2147483647 ]
+              framerate: [ 0/1, 2147483647/1 ]
+      video/x-raw
+                 format: { (string)I420, (string)NV12, (string)P010_10LE, (string)BGRx, (string)RGBA, (string)Y444, (string)GRAY8, (string)GRAY16_LE, (string)GBR, (string)RGB, (string)BGR, (string)BGR10A2_LE, (string)RGB10A2_LE, (string)UYVP, (string)UYVY, (string)BGRA64_LE }
+                  width: [ 1, 2147483647 ]
+                 height: [ 1, 2147483647 ]
+              framerate: [ 0/1, 2147483647/1 ]
+
+Element has no clocking capabilities.
+Element has no URI handling capabilities.
+
+Pads:
+  SINK: 'sink'
+    Pad Template: 'sink'
+  SRC: 'src'
+    Pad Template: 'src'
+
+Element Properties:
+
+  allow-odd-crop      : Allow the odd dimensions for source and destination crop rectangle
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
+  bl-output           : Blocklinear output, applicable only for memory:NVMM NV12 format output buffer
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  compute-hw          : Compute Scaling HW
+                        flags: 可读, 可写, 可控制
+                        Enum "GstNvComputeHWType" Default: 0, "Default"
+                           (0): Default          - Default, GPU for Tesla, VIC for Jetson
+                           (1): GPU              - GPU
+                           (2): VIC              - VIC
+  
+  contiguous-buffers  : Transformed output buffers in a batch are contiguous in memory.
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  copy-hw             : Select hardware used for surface copies.
+                        flags: 可读, 可写, 可控制
+                        Enum "GstNvCopyHWType" Default: 1, "GPU"
+                           (1): GPU              - GPU
+  
+  dest-crop           : Pixel location left:top:width:height
+			Use string with values of crop location to set the property.
+			 e.g. 20:20:40:50
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        String. Default: "0:0:0:0"
+  
+  disable-passthrough : Disable passthrough mode at init time
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  flip-method         : video flip methods
+                        flags: 可读, 可写, 可控制
+                        Enum "GstNvDsVideoFlipMethod" Default: 0, "none"
+                           (0): none             - Identity (no rotation)
+                           (1): counterclockwise - Rotate counter-clockwise 90 degrees
+                           (2): rotate-180       - Rotate 180 degrees
+                           (3): clockwise        - Rotate clockwise 90 degrees
+                           (4): horizontal-flip  - Flip horizontally
+                           (5): upper-right-diagonal - Flip across upper right/lower left diagonal
+                           (6): vertical-flip    - Flip vertically
+                           (7): upper-left-diagonal - Flip across upper left/lower right diagonal
+  
+  gpu-id              : Set GPU Device ID for operation
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 0 
+  
+  interpolation-method: Set interpolation methods
+                        flags: 可读, 可写, 可控制
+                        Enum "GstNvInterpolationMethod" Default: 6, "Default"
+                           (0): Nearest          - Nearest
+                           (1): Bilinear         - Bilinear
+                           (2): Algo-1           - GPU - Cubic, VIC - 5 Tap
+                           (3): Algo-2           - GPU - Super, VIC - 10 Tap
+                           (4): Algo-3           - GPU - LanzoS, VIC - Smart
+                           (5): Algo-4           - GPU - Ignored, VIC - Nicest
+                           (6): Default          - GPU - Nearest, VIC - Nearest
+  
+  name                : The name of the object
+                        flags: 可读, 可写
+                        String. Default: "nvvideoconvert0"
+  
+  nvbuf-memory-type   : Type of NvBufSurface Memory to be allocated for output buffers
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Enum "GstNvBufMemoryType" Default: 2, "nvbuf-mem-cuda-device"
+                           (0): nvbuf-mem-default - Default memory allocated, specific to particular platform
+                           (1): nvbuf-mem-cuda-pinned - Allocate Pinned/Host cuda memory
+                           (2): nvbuf-mem-cuda-device - Allocate Device cuda memory
+                           (3): nvbuf-mem-cuda-unified - Allocate Unified cuda memory
+  
+  output-buffers      : number of output buffers
+                        flags: 可读, 可写, 可以在NULL、READY、PAUSED或PLAYING状态下改变
+                        Unsigned Integer. Range: 1 - 4294967295 Default: 4 
+  
+  parent              : The parent of the object
+                        flags: 可读, 可写
+                        Object of type "GstObject"
+  
+  qos                 : Handle Quality-of-Service events
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  silent              : Produce verbose output ?
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  src-crop            : Pixel location left:top:width:height
+			Use string with values of crop location to set the property.
+			 e.g. 20:20:40:50
+                        flags: 可读, 可写, 可以在NULL、READY、PAUSED或PLAYING状态下改变
+                        String. Default: "0:0:0:0"
+  

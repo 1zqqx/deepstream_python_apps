@@ -1,0 +1,81 @@
+Factory Details:
+  Rank                     primary (256)
+  Long-name                File Source
+  Klass                    Source/File
+  Description              Read from arbitrary point in a file
+  Author                   Erik Walthinsen <omega@cse.ogi.edu>
+  Documentation            https://gstreamer.freedesktop.org/documentation/coreelements/filesrc.html
+
+Plugin Details:
+  Name                     coreelements
+  Description              GStreamer core elements
+  Filename                 /usr/lib/x86_64-linux-gnu/gstreamer-1.0/libgstcoreelements.so
+  Version                  1.24.2
+  License                  LGPL
+  Source module            gstreamer
+  Documentation            https://gstreamer.freedesktop.org/documentation/coreelements/
+  Source release date      2024-04-09
+  Binary package           GStreamer (Ubuntu)
+  Origin URL               https://launchpad.net/ubuntu/+source/gstreamer1.0
+
+GObject
+ +----GInitiallyUnowned
+       +----GstObject
+             +----GstElement
+                   +----GstBaseSrc
+                         +----GstFileSrc
+
+实现的接口:
+  GstURIHandler
+
+Pad Templates:
+  SRC template: 'src'
+    Availability: Always
+    Capabilities:
+      ANY
+
+Element has no clocking capabilities.
+
+URI handling capabilities:
+  Element can act as source.
+  Supported URI protocols:
+    file
+
+Pads:
+  SRC: 'src'
+    Pad Template: 'src'
+
+Element Properties:
+
+  automatic-eos       : Automatically EOS when the segment is done
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
+  blocksize           : Size in bytes to read per buffer (-1 = default)
+                        flags: 可读, 可写
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 4096 
+  
+  do-timestamp        : Apply current stream time to buffers
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  location            : Location of the file to read
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        String. Default: null
+  
+  name                : The name of the object
+                        flags: 可读, 可写
+                        String. Default: "filesrc0"
+  
+  num-buffers         : Number of buffers to output before sending EOS (-1 = unlimited)
+                        flags: 可读, 可写
+                        Integer. Range: -1 - 2147483647 Default: -1 
+  
+  parent              : The parent of the object
+                        flags: 可读, 可写
+                        Object of type "GstObject"
+  
+  typefind            : Run typefind before negotiating (deprecated, non-functional)
+                        flags: 可读, 可写, 已废弃
+                        Boolean. Default: false
+  

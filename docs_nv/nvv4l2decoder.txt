@@ -1,0 +1,186 @@
+Factory Details:
+  Rank                     primary + 11 (267)
+  Long-name                NVIDIA v4l2 video decoder
+  Klass                    Codec/Decoder/Video
+  Description              Decode video streams via V4L2 API
+  Author                   Nicolas Dufresne <nicolas.dufresne@collabora.com>, Viranjan Pagar <vpagar@nvidia.com>
+
+Plugin Details:
+  Name                     nvvideo4linux2
+  Description              Nvidia elements for Video 4 Linux
+  Filename                 /usr/lib/x86_64-linux-gnu/gstreamer-1.0/deepstream/libgstnvvideo4linux2.so
+  Version                  1.14.0
+  License                  LGPL
+  Source module            nvvideo4linux2
+  Binary package           nvvideo4linux2
+  Origin URL               http://nvidia.com/
+
+GObject
+ +----GInitiallyUnowned
+       +----GstObject
+             +----GstElement
+                   +----GstVideoDecoder
+                         +----GstNvV4l2VideoDec
+                               +----nvv4l2decoder
+
+Pad Templates:
+  SINK template: 'sink'
+    Availability: Always
+    Capabilities:
+      image/jpeg
+      video/x-h264
+          stream-format: { (string)byte-stream }
+              alignment: { (string)au }
+      video/x-h265
+          stream-format: { (string)byte-stream }
+              alignment: { (string)au }
+      video/mpeg
+            mpegversion: 4
+           systemstream: false
+                 parsed: true
+                  width: [ 1, 2147483647 ]
+                 height: [ 1, 2147483647 ]
+      video/mpeg
+            mpegversion: [ 1, 2 ]
+           systemstream: false
+                 parsed: true
+                  width: [ 1, 2147483647 ]
+                 height: [ 1, 2147483647 ]
+      video/x-divx
+            divxversion: [ 4, 5 ]
+                  width: [ 1, 2147483647 ]
+                 height: [ 1, 2147483647 ]
+      video/x-av1
+          stream-format: { (string)obu-stream }
+              alignment: { (string)frame }
+      video/x-vp8
+      video/x-vp9
+                  width: [ 1, 2147483647 ]
+                 height: [ 1, 2147483647 ]
+  
+  SRC template: 'src'
+    Availability: Always
+    Capabilities:
+      video/x-raw(memory:NVMM)
+                  width: [ 1, 2147483647 ]
+                 height: [ 1, 2147483647 ]
+              framerate: [ 0/1, 2147483647/1 ]
+
+Element has no clocking capabilities.
+Element has no URI handling capabilities.
+
+Pads:
+  SINK: 'sink'
+    Pad Template: 'sink'
+  SRC: 'src'
+    Pad Template: 'src'
+
+Element Properties:
+
+  automatic-request-sync-point-flags: Flags to use when automatically requesting sync points
+                        flags: 可读, 可写
+                        Flags "GstVideoDecoderRequestSyncPointFlags" Default: 0x00000003, "corrupt-output+discard-input"
+                           (0x00000001): discard-input    - GST_VIDEO_DECODER_REQUEST_SYNC_POINT_DISCARD_INPUT
+                           (0x00000002): corrupt-output   - GST_VIDEO_DECODER_REQUEST_SYNC_POINT_CORRUPT_OUTPUT
+  
+  automatic-request-sync-points: Automatically request sync points when it would be useful
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  capture-io-mode     : Capture I/O mode (matches src pad)
+                        flags: 可读, 可写
+                        Enum "GstNvV4l2IOMode" Default: 0, "auto"
+                           (0): auto             - GST_V4L2_IO_AUTO
+                           (2): mmap             - GST_V4L2_IO_MMAP
+                           (5): dmabuf-import    - GST_V4L2_IO_DMABUF_IMPORT
+  
+  cudadec-memtype     : Set to specify memory type for cuda decoder buffers
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Enum "CudaDecMemType" Default: 0, "memtype_device"
+                           (0): memtype_device   - Memory type Device
+                           (1): memtype_pinned   - Memory type Host Pinned
+                           (2): memtype_unified  - Memory type Unified
+  
+  device              : Device location
+                        flags: 可读
+                        String. Default: "/dev/nvidia0"
+  
+  device-fd           : File descriptor of the device
+                        flags: 可读
+                        Integer. Range: -1 - 2147483647 Default: -1 
+  
+  device-name         : Name of the device
+                        flags: Opening in BLOCKING MODE 
+可读
+                        String. Default: ""
+  
+  disable-dpb         : Set to disable DPB buffer for low latency
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  discard-corrupted-frames: Discard frames marked as corrupted instead of outputting them
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  drop-frame-interval : Interval to drop the frames,ex: value of 5 means every 5th frame will be given by decoder, rest all dropped
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Unsigned Integer. Range: 0 - 30 Default: 0 
+  
+  extra-controls      : Extra v4l2 controls (CIDs) for the device
+                        flags: 可读, 可写
+                        Boxed pointer of type "GstStructure"
+  
+  extract-sei-type5-data: Set to extract and attach SEI type5 unregistered data on output buffer
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  gpu-id              : Set to GPU Device ID for decoder 
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 0 
+  
+  low-latency-mode    : Set low latency mode for bitstreams having I and IPPP frames
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  max-errors          : Max consecutive decoder errors before returning flow error
+                        flags: 可读, 可写
+                        Integer. Range: -1 - 2147483647 Default: -1 
+  
+  min-force-key-unit-interval: Minimum interval between force-keyunit requests in nanoseconds
+                        flags: 可读, 可写
+                        Unsigned Integer64. Range: 0 - 18446744073709551615 Default: 0 
+  
+  name                : The name of the object
+                        flags: 可读, 可写
+                        String. Default: "nvv4l2decoder0"
+  
+  num-extra-surfaces  : Additional number of surfaces in addition to min decode surfaces given by the v4l2 driver
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Unsigned Integer. Range: 0 - 55 Default: 0 
+  
+  output-io-mode      : Output side I/O mode (matches sink pad)
+                        flags: 可读, 可写
+                        Enum "GstNvV4l2IOMode" Default: 0, "auto"
+                           (0): auto             - GST_V4L2_IO_AUTO
+                           (2): mmap             - GST_V4L2_IO_MMAP
+                           (5): dmabuf-import    - GST_V4L2_IO_DMABUF_IMPORT
+  
+  parent              : The parent of the object
+                        flags: 可读, 可写
+                        Object of type "GstObject"
+  
+  qos                 : Handle Quality-of-Service events from downstream
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
+  sei-uuid            : Set 16 bytes UUID string for SEI Parsing, extract-sei-type5-data should be TRUE
+                        flags: 可读, 可写
+                        String. Default: null
+  
+  skip-frames         : Type of frames to skip during decoding
+                        flags: 可读, 可写, 可以在NULL、READY、PAUSED或PLAYING状态下改变
+                        Enum "SkipFrame" Default: 0, "decode_all"
+                           (0): decode_all       - Decode all frames
+                           (1): decode_non_ref   - Decode non-ref frames
+                           (2): decode_key       - decode key frames
+  

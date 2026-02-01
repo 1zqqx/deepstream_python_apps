@@ -1,0 +1,130 @@
+Factory Details:
+  Rank                     primary (256)
+  Long-name                x265enc
+  Klass                    Codec/Encoder/Video
+  Description              H265 Encoder
+  Author                   Thijs Vermeir <thijs.vermeir@barco.com>
+  Documentation            https://gstreamer.freedesktop.org/documentation/x265/#x265enc-page
+
+Plugin Details:
+  Name                     x265
+  Description              x265-based H265 plugins
+  Filename                 /usr/lib/x86_64-linux-gnu/gstreamer-1.0/libgstx265.so
+  Version                  1.24.2
+  License                  GPL
+  Source module            gst-plugins-bad
+  Documentation            https://gstreamer.freedesktop.org/documentation/x265/
+  Source release date      2024-04-09
+  Binary package           GStreamer Bad Plugins (Ubuntu)
+  Origin URL               https://launchpad.net/ubuntu/+source/gst-plugins-bad1.0
+
+GObject
+ +----GInitiallyUnowned
+       +----GstObject
+             +----GstElement
+                   +----GstVideoEncoder
+                         +----GstX265Enc
+
+实现的接口:
+  GstPreset
+
+Pad Templates:
+  SINK template: 'sink'
+    Availability: Always
+    Capabilities:
+      video/x-raw
+              framerate: [ 0/1, 2147483647/1 ]
+                  width: [ 16, 2147483647 ]
+                 height: [ 16, 2147483647 ]
+                 format: { (string)Y444, (string)Y42B, (string)I420, (string)Y444_10LE, (string)I422_10LE, (string)I420_10LE, (string)Y444_12LE, (string)I422_12LE, (string)I420_12LE }
+  
+  SRC template: 'src'
+    Availability: Always
+    Capabilities:
+      video/x-h265
+              framerate: [ 0/1, 2147483647/1 ]
+                  width: [ 16, 2147483647 ]
+                 height: [ 16, 2147483647 ]
+          stream-format: byte-stream
+              alignment: au
+                profile: { (string)main, (string)main-still-picture, (string)main-intra, (string)main-444, (string)main-444-intra, (string)main-444-still-picture, (string)main-10, (string)main-10-intra, (string)main-422-10, (string)main-422-10-intra, (string)main-444-10, (string)main-444-10-intra, (string)main-12, (string)main-12-intra, (string)main-422-12, (string)main-422-12-intra, (string)main-444-12, (string)main-444-12-intra }
+
+Element has no clocking capabilities.
+Element has no URI handling capabilities.
+
+Pads:
+  SINK: 'sink'
+    Pad Template: 'sink'
+  SRC: 'src'
+    Pad Template: 'src'
+
+Element Properties:
+
+  bitrate             : Bitrate in kbit/sec
+                        flags: 可读, 可写, 可以在NULL、READY、PAUSED或PLAYING状态下改变
+                        Unsigned Integer. Range: 1 - 102400 Default: 2048 
+  
+  key-int-max         : Maximal distance between two key-frames (0 = x265 default / 250)
+                        flags: 可读, 可写
+                        Integer. Range: 0 - 2147483647 Default: 0 
+  
+  log-level           : x265 log level
+                        flags: 可读, 可写
+                        Enum "GstX265LogLevel" Default: -1, "none"
+                           (-1): none             - No logging
+                           (0): error            - Error
+                           (1): warning          - Warning
+                           (2): info             - Info
+                           (3): debug            - Debug
+                           (4): full             - Full
+  
+  min-force-key-unit-interval: Minimum interval between force-keyunit requests in nanoseconds
+                        flags: 可读, 可写
+                        Unsigned Integer64. Range: 0 - 18446744073709551615 Default: 0 
+  
+  name                : The name of the object
+                        flags: 可读, 可写
+                        String. Default: "x265enc0"
+  
+  option-string       : String of x265 options (overridden by element properties) in the format "key1=value1:key2=value2".
+                        flags: 可读, 可写
+                        String. Default: ""
+  
+  parent              : The parent of the object
+                        flags: 可读, 可写
+                        Object of type "GstObject"
+  
+  qos                 : Handle Quality-of-Service events from downstream
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  qp                  : QP for P slices in (implied) CQP mode (-1 = disabled)
+                        flags: 可读, 可写
+                        Integer. Range: -1 - 51 Default: -1 
+  
+  speed-preset        : Preset name for speed/quality tradeoff options
+                        flags: 可读, 可写
+                        Enum "GstX265SpeedPreset" Default: 6, "medium"
+                           (0): No preset        - No preset
+                           (1): ultrafast        - ultrafast
+                           (2): superfast        - superfast
+                           (3): veryfast         - veryfast
+                           (4): faster           - faster
+                           (5): fast             - fast
+                           (6): medium           - medium
+                           (7): slow             - slow
+                           (8): slower           - slower
+                           (9): veryslow         - veryslow
+                           (10): placebo          - placebo
+  
+  tune                : Preset name for tuning options
+                        flags: 可读, 可写
+                        Enum "GstX265Tune" Default: 2, "ssim"
+                           (0): No tunning       - No tunning
+                           (1): psnr             - psnr
+                           (2): ssim             - ssim
+                           (3): grain            - grain
+                           (4): zerolatency      - zerolatency
+                           (5): fastdecode       - fastdecode
+                           (6): animation        - animation
+  

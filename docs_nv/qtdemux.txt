@@ -1,0 +1,81 @@
+Factory Details:
+  Rank                     primary (256)
+  Long-name                QuickTime demuxer
+  Klass                    Codec/Demuxer
+  Description              Demultiplex a QuickTime file into audio and video streams
+  Author                   David Schleef <ds@schleef.org>, Wim Taymans <wim@fluendo.com>
+  Documentation            https://gstreamer.freedesktop.org/documentation/isomp4/qtdemux.html
+
+Plugin Details:
+  Name                     isomp4
+  Description              ISO base media file format support (mp4, 3gpp, qt, mj2)
+  Filename                 /usr/lib/x86_64-linux-gnu/gstreamer-1.0/libgstisomp4.so
+  Version                  1.24.2
+  License                  LGPL
+  Source module            gst-plugins-good
+  Documentation            https://gstreamer.freedesktop.org/documentation/isomp4/
+  Source release date      2024-04-09
+  Binary package           GStreamer Good Plugins (Ubuntu)
+  Origin URL               https://launchpad.net/ubuntu/+source/gst-plugins-good1.0
+
+GObject
+ +----GInitiallyUnowned
+       +----GstObject
+             +----GstElement
+                   +----GstQTDemux
+
+Pad Templates:
+  SRC template: 'audio_%u'
+    Availability: Sometimes
+    Capabilities:
+      ANY
+  
+  SINK template: 'sink'
+    Availability: Always
+    Capabilities:
+      video/quicktime
+      video/mj2
+      audio/x-m4a
+      application/x-3gp
+  
+  SRC template: 'subtitle_%u'
+    Availability: Sometimes
+    Capabilities:
+      ANY
+  
+  SRC template: 'video_%u'
+    Availability: Sometimes
+    Capabilities:
+      ANY
+
+Element has no clocking capabilities.
+Element has no URI handling capabilities.
+
+Pads:
+  SINK: 'sink'
+    Pad Template: 'sink'
+
+Element Properties:
+
+  name                : The name of the object
+                        flags: 可读, 可写
+                        String. Default: "qtdemux0"
+  
+  parent              : The parent of the object
+                        flags: 可读, 可写
+                        Object of type "GstObject"
+  
+
+Element Signals:
+
+  "pad-added" :  void user_function (GstElement * object,
+                                     GstPad * arg0,
+                                     gpointer user_data);
+
+  "pad-removed" :  void user_function (GstElement * object,
+                                       GstPad * arg0,
+                                       gpointer user_data);
+
+  "no-more-pads" :  void user_function (GstElement * object,
+                                        gpointer user_data);
+
