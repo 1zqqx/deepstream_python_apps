@@ -152,6 +152,8 @@ def main(args):
         sys.stderr.write(" Unable to create Source \n")
         sys.exit(1)
 
+    # capsfilter 作用：约束 v4l2src 下游协商结果 摄像头可输出多种格式(YUYV/MJPEG等)和帧率，
+    # 此处限定为 video/x-raw + framerate=30/1，避免后续选到不想要的格式或帧率。 232 行限制属性
     caps_v4l2src = Gst.ElementFactory.make("capsfilter", "v4l2src_caps")
     if not caps_v4l2src:
         sys.stderr.write(" Unable to create v4l2src capsfilter \n")
@@ -159,27 +161,24 @@ def main(args):
 
     print("===> Creating Video Converter \n")
 
-    # Adding videoconvert -> nvvideoconvert as not all
-    # raw formats are supported by nvvideoconvert;
-    # Say YUYV is unsupported - which is the common
-    # raw format for many logi usb cams
-    # In case we have a camera with raw format supported in
-    # nvvideoconvert, GStreamer plugins' capability negotiation
-    # shall be intelligent enough to reduce compute by
-    # videoconvert doing passthrough (TODO we need to confirm this)
+    # 为何 videoconvert -> nvvideoconvert：nvvideoconvert 只支持部分 raw 格式（如 NV12/I420），
+    # 常见 USB 摄像头输出 YUYV，nvvideoconvert 不接 YUYV。故先用软件 videoconvert 把 YUYV 等
+    # 转成 nvvideoconvert 支持的格式；若摄像头已是 NV12，协商时 videoconvert 可 passthrough。
 
-    # videoconvert to make sure a superset of raw formats are supported
+    # videoconvert：软件格式转换，支持多种 raw 格式（含 YUYV）-> NV12/I420 等
     vidconvsrc = Gst.ElementFactory.make("videoconvert", "convertor_src1")
     if not vidconvsrc:
         sys.stderr.write(" Unable to create videoconvert \n")
         sys.exit(1)
 
-    # nvvideoconvert to convert incoming raw buffers to NVMM Mem (NvBufSurface API)
+    # nvvideoconvert：上游格式/内存由 GStreamer 能力协商决定（见 sink/src pad caps），
+    # 此处将系统内存 raw（如 NV12）转为 NVMM（GPU）内存，供 nvstreammux/nvinfer 使用。
     nvvidconvsrc = Gst.ElementFactory.make("nvvideoconvert", "convertor_src2")
     if not nvvidconvsrc:
         sys.stderr.write(" Unable to create Nvvideoconvert \n")
         sys.exit(1)
 
+    # nvvideoconvert 的 capsfilter: 固定为 video/x-raw(memory:NVMM)，保证进入 nvstreammux 的已是 GPU 缓冲。
     caps_vidconvsrc = Gst.ElementFactory.make("capsfilter", "nvmm_caps")
     if not caps_vidconvsrc:
         sys.stderr.write(" Unable to create capsfilter \n")
@@ -198,7 +197,8 @@ def main(args):
         sys.stderr.write(" Unable to create pgie \n")
         sys.exit(1)
 
-    # TODO ? -> Use convertor to convert from NV12 to RGBA as required by nvosd
+    # 第二个 nvvideoconvert：nvinfer 输出多为 NV12(NVMM)；nvosd 画框/文字需要 RGBA，
+    # 此处将 NV12(NVMM) -> RGBA(NVMM)，供 nvosd 与后续显示 sink 使用。
     nvvidconv = Gst.ElementFactory.make("nvvideoconvert", "convertor")
     if not nvvidconv:
         sys.stderr.write(" Unable to create nvvidconv \n")
@@ -255,9 +255,8 @@ def main(args):
     pipeline.add(nvosd)
     pipeline.add(sink)
 
-    # we link the elements together
-    # v4l2src -> nvvideoconvert -> mux ->
-    # nvinfer -> nvvideoconvert -> nvosd -> video-renderer
+    # 链接顺序：v4l2src -> caps(30fps) -> videoconvert -> nvvideoconvert -> caps(NVMM) ->
+    # nvstreammux -> nvinfer -> nvvideoconvert(NV12->RGBA) -> nvosd -> video-renderer
     print("===> Linking elements in the Pipeline \n")
     source.link(caps_v4l2src)
     caps_v4l2src.link(vidconvsrc)
