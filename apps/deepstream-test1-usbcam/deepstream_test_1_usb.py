@@ -18,9 +18,11 @@
 ################################################################################
 
 import sys
-sys.path.append('../')
+
+sys.path.append("../")
 import gi
-gi.require_version('Gst', '1.0')
+
+gi.require_version("Gst", "1.0")
 from gi.repository import GLib, Gst
 from common.platform_info import PlatformInfo
 from common.bus_call import bus_call
@@ -33,16 +35,17 @@ PGIE_CLASS_ID_PERSON = 2
 PGIE_CLASS_ID_ROADSIGN = 3
 MUXER_BATCH_TIMEOUT_USEC = 33000
 
-def osd_sink_pad_buffer_probe(pad,info,u_data):
-    frame_number=0
-    #Intiallizing object counter with 0.
+
+def osd_sink_pad_buffer_probe(pad, info, u_data):
+    frame_number = 0
+    # Intiallizing object counter with 0.
     obj_counter = {
-        PGIE_CLASS_ID_VEHICLE:0,
-        PGIE_CLASS_ID_PERSON:0,
-        PGIE_CLASS_ID_BICYCLE:0,
-        PGIE_CLASS_ID_ROADSIGN:0
+        PGIE_CLASS_ID_VEHICLE: 0,
+        PGIE_CLASS_ID_PERSON: 0,
+        PGIE_CLASS_ID_BICYCLE: 0,
+        PGIE_CLASS_ID_ROADSIGN: 0,
     }
-    num_rects=0
+    num_rects = 0
 
     gst_buffer = info.get_buffer()
     if not gst_buffer:
@@ -61,29 +64,29 @@ def osd_sink_pad_buffer_probe(pad,info,u_data):
             # The casting also keeps ownership of the underlying memory
             # in the C code, so the Python garbage collector will leave
             # it alone.
-           frame_meta = pyds.NvDsFrameMeta.cast(l_frame.data)
+            frame_meta = pyds.NvDsFrameMeta.cast(l_frame.data)
         except StopIteration:
             break
 
-        frame_number=frame_meta.frame_num
+        frame_number = frame_meta.frame_num
         num_rects = frame_meta.num_obj_meta
-        l_obj=frame_meta.obj_meta_list
+        l_obj = frame_meta.obj_meta_list
         while l_obj is not None:
             try:
                 # Casting l_obj.data to pyds.NvDsObjectMeta
-                obj_meta=pyds.NvDsObjectMeta.cast(l_obj.data)
+                obj_meta = pyds.NvDsObjectMeta.cast(l_obj.data)
             except StopIteration:
                 break
             obj_counter[obj_meta.class_id] += 1
-            try: 
-                l_obj=l_obj.next
+            try:
+                l_obj = l_obj.next
             except StopIteration:
                 break
 
         # Acquiring a display meta object. The memory ownership remains in
         # the C code so downstream plugins can still access it. Otherwise
         # the garbage collector will claim it when this probe function exits.
-        display_meta=pyds.nvds_acquire_display_meta_from_pool(batch_meta)
+        display_meta = pyds.nvds_acquire_display_meta_from_pool(batch_meta)
         display_meta.num_labels = 1
         py_nvosd_text_params = display_meta.text_params[0]
         # Setting display text to be shown on screen
@@ -91,7 +94,12 @@ def osd_sink_pad_buffer_probe(pad,info,u_data):
         # memory will not be claimed by the garbage collector.
         # Reading the display_text field here will return the C address of the
         # allocated string. Use pyds.get_string() to get the string content.
-        py_nvosd_text_params.display_text = "Frame Number={} Number of Objects={} Vehicle_count={} Person_count={}".format(frame_number, num_rects, obj_counter[PGIE_CLASS_ID_VEHICLE], obj_counter[PGIE_CLASS_ID_PERSON])
+        py_nvosd_text_params.display_text = "Frame Number={} Number of Objects={} Vehicle_count={} Person_count={}".format(
+            frame_number,
+            num_rects,
+            obj_counter[PGIE_CLASS_ID_VEHICLE],
+            obj_counter[PGIE_CLASS_ID_PERSON],
+        )
 
         # Now set the offsets where the string should appear
         py_nvosd_text_params.x_offset = 10
@@ -111,17 +119,17 @@ def osd_sink_pad_buffer_probe(pad,info,u_data):
         print(pyds.get_string(py_nvosd_text_params.display_text))
         pyds.nvds_add_display_meta_to_frame(frame_meta, display_meta)
         try:
-            l_frame=l_frame.next
+            l_frame = l_frame.next
         except StopIteration:
             break
-			
-    return Gst.PadProbeReturn.OK	
+
+    return Gst.PadProbeReturn.OK
 
 
 def main(args):
     # Check input arguments
     if len(args) != 2:
-        sys.stderr.write("usage: %s <v4l2-device-path>\n" % args[0])
+        sys.stderr.write(f"usage: {args[0]} <v4l2-device-path>\n")
         sys.exit(1)
 
     platform_info = PlatformInfo()
@@ -130,24 +138,26 @@ def main(args):
 
     # Create gstreamer elements
     # Create Pipeline element that will form a connection of other elements
-    print("Creating Pipeline \n ")
+    print("===> Creating Pipeline \n ")
     pipeline = Gst.Pipeline()
 
     if not pipeline:
         sys.stderr.write(" Unable to create Pipeline \n")
+        sys.exit(1)
 
     # Source element for reading from the file
-    print("Creating Source \n ")
+    print("===> Creating Source \n ")
     source = Gst.ElementFactory.make("v4l2src", "usb-cam-source")
     if not source:
         sys.stderr.write(" Unable to create Source \n")
+        sys.exit(1)
 
     caps_v4l2src = Gst.ElementFactory.make("capsfilter", "v4l2src_caps")
     if not caps_v4l2src:
         sys.stderr.write(" Unable to create v4l2src capsfilter \n")
+        sys.exit(1)
 
-
-    print("Creating Video Converter \n")
+    print("===> Creating Video Converter \n")
 
     # Adding videoconvert -> nvvideoconvert as not all
     # raw formats are supported by nvvideoconvert;
@@ -158,42 +168,47 @@ def main(args):
     # shall be intelligent enough to reduce compute by
     # videoconvert doing passthrough (TODO we need to confirm this)
 
-
     # videoconvert to make sure a superset of raw formats are supported
     vidconvsrc = Gst.ElementFactory.make("videoconvert", "convertor_src1")
     if not vidconvsrc:
         sys.stderr.write(" Unable to create videoconvert \n")
+        sys.exit(1)
 
     # nvvideoconvert to convert incoming raw buffers to NVMM Mem (NvBufSurface API)
     nvvidconvsrc = Gst.ElementFactory.make("nvvideoconvert", "convertor_src2")
     if not nvvidconvsrc:
         sys.stderr.write(" Unable to create Nvvideoconvert \n")
+        sys.exit(1)
 
     caps_vidconvsrc = Gst.ElementFactory.make("capsfilter", "nvmm_caps")
     if not caps_vidconvsrc:
         sys.stderr.write(" Unable to create capsfilter \n")
+        sys.exit(1)
 
     # Create nvstreammux instance to form batches from one or more sources.
     streammux = Gst.ElementFactory.make("nvstreammux", "Stream-muxer")
     if not streammux:
         sys.stderr.write(" Unable to create NvStreamMux \n")
+        sys.exit(1)
 
     # Use nvinfer to run inferencing on camera's output,
     # behaviour of inferencing is set through config file
     pgie = Gst.ElementFactory.make("nvinfer", "primary-inference")
     if not pgie:
         sys.stderr.write(" Unable to create pgie \n")
+        sys.exit(1)
 
-    # Use convertor to convert from NV12 to RGBA as required by nvosd
+    # TODO ? -> Use convertor to convert from NV12 to RGBA as required by nvosd
     nvvidconv = Gst.ElementFactory.make("nvvideoconvert", "convertor")
     if not nvvidconv:
         sys.stderr.write(" Unable to create nvvidconv \n")
+        sys.exit(1)
 
     # Create OSD to draw on the converted RGBA buffer
     nvosd = Gst.ElementFactory.make("nvdsosd", "onscreendisplay")
-
     if not nvosd:
         sys.stderr.write(" Unable to create nvosd \n")
+        sys.exit(1)
 
     # Finally render the osd output
     if platform_info.is_integrated_gpu():
@@ -206,24 +221,29 @@ def main(args):
             print("Creating nv3dsink \n")
             sink = Gst.ElementFactory.make("nv3dsink", "nv3d-sink")
         else:
-            print("Creating EGLSink \n")
+            print("===> Creating EGLSink \n")
             sink = Gst.ElementFactory.make("nveglglessink", "nvvideo-renderer")
         if not sink:
             sys.stderr.write(" Unable to create egl sink \n")
+            sys.exit(1)
 
-    print("Playing cam %s " %args[1])
-    caps_v4l2src.set_property('caps', Gst.Caps.from_string("video/x-raw, framerate=30/1"))
-    caps_vidconvsrc.set_property('caps', Gst.Caps.from_string("video/x-raw(memory:NVMM)"))
-    source.set_property('device', args[1])
-    streammux.set_property('width', 1920)
-    streammux.set_property('height', 1080)
-    streammux.set_property('batch-size', 1)
-    streammux.set_property('batched-push-timeout', MUXER_BATCH_TIMEOUT_USEC)
-    pgie.set_property('config-file-path', "dstest1_pgie_config.txt")
+    print("===> Playing cam %s " % args[1])
+    source.set_property("device", args[1])
+    caps_v4l2src.set_property(
+        "caps", Gst.Caps.from_string("video/x-raw, framerate=30/1")
+    )
+    caps_vidconvsrc.set_property(
+        "caps", Gst.Caps.from_string("video/x-raw(memory:NVMM)")
+    )
+    streammux.set_property("width", 1280)
+    streammux.set_property("height", 720)
+    streammux.set_property("batch-size", 1)
+    streammux.set_property("batched-push-timeout", MUXER_BATCH_TIMEOUT_USEC)
+    pgie.set_property("config-file-path", "dstest1_pgie_config.txt")
     # Set sync = false to avoid late frame drops at the display-sink
-    sink.set_property('sync', False)
+    sink.set_property("sync", False)
 
-    print("Adding elements to Pipeline \n")
+    print("===> Adding elements to Pipeline \n")
     pipeline.add(source)
     pipeline.add(caps_v4l2src)
     pipeline.add(vidconvsrc)
@@ -236,9 +256,9 @@ def main(args):
     pipeline.add(sink)
 
     # we link the elements together
-    # v4l2src -> nvvideoconvert -> mux -> 
+    # v4l2src -> nvvideoconvert -> mux ->
     # nvinfer -> nvvideoconvert -> nvosd -> video-renderer
-    print("Linking elements in the Pipeline \n")
+    print("===> Linking elements in the Pipeline \n")
     source.link(caps_v4l2src)
     caps_v4l2src.link(vidconvsrc)
     vidconvsrc.link(nvvidconvsrc)
@@ -260,7 +280,7 @@ def main(args):
     loop = GLib.MainLoop()
     bus = pipeline.get_bus()
     bus.add_signal_watch()
-    bus.connect ("message", bus_call, loop)
+    bus.connect("message", bus_call, loop)
 
     # Lets add probe to get informed of the meta data generated, we add probe to
     # the sink pad of the osd element, since by that time, the buffer would have
@@ -272,7 +292,7 @@ def main(args):
     osdsinkpad.add_probe(Gst.PadProbeType.BUFFER, osd_sink_pad_buffer_probe, 0)
 
     # start play back and listen to events
-    print("Starting pipeline \n")
+    print("===> Starting pipeline \n")
     pipeline.set_state(Gst.State.PLAYING)
     try:
         loop.run()
@@ -281,6 +301,11 @@ def main(args):
     # cleanup
     pipeline.set_state(Gst.State.NULL)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     sys.exit(main(sys.argv))
 
+
+"""
+python deepstream_test_1_usb.py /dev/video0
+"""
