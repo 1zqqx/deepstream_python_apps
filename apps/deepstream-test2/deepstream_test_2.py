@@ -25,7 +25,7 @@ import configparser
 import gi
 
 gi.require_version("Gst", "1.0")
-from gi.repository import GLib, Gst
+from gi.repository import GLib, Gst  # type:ignore
 from common.platform_info import PlatformInfo
 from common.bus_call import bus_call
 
