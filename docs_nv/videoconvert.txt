@@ -1,0 +1,181 @@
+Factory Details:
+  Rank                     marginal (64)
+  Long-name                Video colorspace converter
+  Klass                    Filter/Converter/Video/Colorspace
+  Description              Converts video from one colorspace to another
+  Author                   Wim Taymans <wim.taymans@gmail.com>
+  Documentation            https://gstreamer.freedesktop.org/documentation/videoconvertscale/videoconvert.html
+
+Plugin Details:
+  Name                     videoconvertscale
+  Description              Convert video colorspaces and resizes video frames
+  Filename                 /usr/lib/x86_64-linux-gnu/gstreamer-1.0/libgstvideoconvertscale.so
+  Version                  1.24.2
+  License                  LGPL
+  Source module            gst-plugins-base
+  Documentation            https://gstreamer.freedesktop.org/documentation/videoconvertscale/
+  Source release date      2024-04-09
+  Binary package           GStreamer Base Plugins (Ubuntu)
+  Origin URL               https://launchpad.net/ubuntu/+source/gst-plugins-base1.0
+
+GObject
+ +----GInitiallyUnowned
+       +----GstObject
+             +----GstElement
+                   +----GstBaseTransform
+                         +----GstVideoFilter
+                               +----GstVideoConvertScale
+                                     +----GstVideoConvert
+
+Pad Templates:
+  SINK template: 'sink'
+    Availability: Always
+    Capabilities:
+      video/x-raw
+                 format: { (string)A444_16LE, (string)A444_16BE, (string)AYUV64, (string)RGBA64_LE, (string)ARGB64, (string)ARGB64_LE, (string)BGRA64_LE, (string)ABGR64_LE, (string)RGBA64_BE, (string)ARGB64_BE, (string)BGRA64_BE, (string)ABGR64_BE, (string)A422_16LE, (string)A422_16BE, (string)A420_16LE, (string)A420_16BE, (string)A444_12LE, (string)GBRA_12LE, (string)A444_12BE, (string)GBRA_12BE, (string)Y412_LE, (string)Y412_BE, (string)A422_12LE, (string)A422_12BE, (string)A420_12LE, (string)A420_12BE, (string)A444_10LE, (string)GBRA_10LE, (string)A444_10BE, (string)GBRA_10BE, (string)A422_10LE, (string)A422_10BE, (string)A420_10LE, (string)A420_10BE, (string)BGR10A2_LE, (string)RGB10A2_LE, (string)Y410, (string)A444, (string)GBRA, (string)AYUV, (string)VUYA, (string)RGBA, (string)RBGA, (string)ARGB, (string)BGRA, (string)ABGR, (string)A422, (string)A420, (string)AV12, (string)Y444_16LE, (string)GBR_16LE, (string)Y444_16BE, (string)GBR_16BE, (string)v216, (string)P016_LE, (string)P016_BE, (string)Y444_12LE, (string)GBR_12LE, (string)Y444_12BE, (string)GBR_12BE, (string)I422_12LE, (string)I422_12BE, (string)Y212_LE, (string)Y212_BE, (string)I420_12LE, (string)I420_12BE, (string)P012_LE, (string)P012_BE, (string)Y444_10LE, (string)GBR_10LE, (string)Y444_10BE, (string)GBR_10BE, (string)r210, (string)I422_10LE, (string)I422_10BE, (string)NV16_10LE32, (string)Y210, (string)UYVP, (string)v210, (string)I420_10LE, (string)I420_10BE, (string)P010_10LE, (string)NV12_10LE40, (string)NV12_10LE32, (string)P010_10BE, (string)MT2110R, (string)MT2110T, (string)NV12_10BE_8L128, (string)NV12_10LE40_4L4, (string)Y444, (string)BGRP, (string)GBR, (string)RGBP, (string)NV24, (string)v308, (string)IYU2, (string)RGBx, (string)xRGB, (string)BGRx, (string)xBGR, (string)RGB, (string)BGR, (string)Y42B, (string)NV16, (string)NV61, (string)YUY2, (string)YVYU, (string)UYVY, (string)VYUY, (string)I420, (string)YV12, (string)NV12, (string)NV21, (string)NV12_16L32S, (string)NV12_32L32, (string)NV12_4L4, (string)NV12_64Z32, (string)NV12_8L128, (string)Y41B, (string)IYU1, (string)YUV9, (string)YVU9, (string)BGR16, (string)RGB16, (string)BGR15, (string)RGB15, (string)RGB8P, (string)GRAY16_LE, (string)GRAY16_BE, (string)GRAY10_LE32, (string)GRAY8 }
+                  width: [ 1, 32767 ]
+                 height: [ 1, 32767 ]
+              framerate: [ 0/1, 2147483647/1 ]
+      video/x-raw(ANY)
+                 format: { (string)DMA_DRM, (string)A444_16LE, (string)A444_16BE, (string)AYUV64, (string)RGBA64_LE, (string)ARGB64, (string)ARGB64_LE, (string)BGRA64_LE, (string)ABGR64_LE, (string)RGBA64_BE, (string)ARGB64_BE, (string)BGRA64_BE, (string)ABGR64_BE, (string)A422_16LE, (string)A422_16BE, (string)A420_16LE, (string)A420_16BE, (string)A444_12LE, (string)GBRA_12LE, (string)A444_12BE, (string)GBRA_12BE, (string)Y412_LE, (string)Y412_BE, (string)A422_12LE, (string)A422_12BE, (string)A420_12LE, (string)A420_12BE, (string)A444_10LE, (string)GBRA_10LE, (string)A444_10BE, (string)GBRA_10BE, (string)A422_10LE, (string)A422_10BE, (string)A420_10LE, (string)A420_10BE, (string)BGR10A2_LE, (string)RGB10A2_LE, (string)Y410, (string)A444, (string)GBRA, (string)AYUV, (string)VUYA, (string)RGBA, (string)RBGA, (string)ARGB, (string)BGRA, (string)ABGR, (string)A422, (string)A420, (string)AV12, (string)Y444_16LE, (string)GBR_16LE, (string)Y444_16BE, (string)GBR_16BE, (string)v216, (string)P016_LE, (string)P016_BE, (string)Y444_12LE, (string)GBR_12LE, (string)Y444_12BE, (string)GBR_12BE, (string)I422_12LE, (string)I422_12BE, (string)Y212_LE, (string)Y212_BE, (string)I420_12LE, (string)I420_12BE, (string)P012_LE, (string)P012_BE, (string)Y444_10LE, (string)GBR_10LE, (string)Y444_10BE, (string)GBR_10BE, (string)r210, (string)I422_10LE, (string)I422_10BE, (string)NV16_10LE32, (string)Y210, (string)UYVP, (string)v210, (string)I420_10LE, (string)I420_10BE, (string)P010_10LE, (string)NV12_10LE40, (string)NV12_10LE32, (string)P010_10BE, (string)MT2110R, (string)MT2110T, (string)NV12_10BE_8L128, (string)NV12_10LE40_4L4, (string)Y444, (string)BGRP, (string)GBR, (string)RGBP, (string)NV24, (string)v308, (string)IYU2, (string)RGBx, (string)xRGB, (string)BGRx, (string)xBGR, (string)RGB, (string)BGR, (string)Y42B, (string)NV16, (string)NV61, (string)YUY2, (string)YVYU, (string)UYVY, (string)VYUY, (string)I420, (string)YV12, (string)NV12, (string)NV21, (string)NV12_16L32S, (string)NV12_32L32, (string)NV12_4L4, (string)NV12_64Z32, (string)NV12_8L128, (string)Y41B, (string)IYU1, (string)YUV9, (string)YVU9, (string)BGR16, (string)RGB16, (string)BGR15, (string)RGB15, (string)RGB8P, (string)GRAY16_LE, (string)GRAY16_BE, (string)GRAY10_LE32, (string)GRAY8 }
+                  width: [ 1, 32767 ]
+                 height: [ 1, 32767 ]
+              framerate: [ 0/1, 2147483647/1 ]
+  
+  SRC template: 'src'
+    Availability: Always
+    Capabilities:
+      video/x-raw
+                 format: { (string)A444_16LE, (string)A444_16BE, (string)AYUV64, (string)RGBA64_LE, (string)ARGB64, (string)ARGB64_LE, (string)BGRA64_LE, (string)ABGR64_LE, (string)RGBA64_BE, (string)ARGB64_BE, (string)BGRA64_BE, (string)ABGR64_BE, (string)A422_16LE, (string)A422_16BE, (string)A420_16LE, (string)A420_16BE, (string)A444_12LE, (string)GBRA_12LE, (string)A444_12BE, (string)GBRA_12BE, (string)Y412_LE, (string)Y412_BE, (string)A422_12LE, (string)A422_12BE, (string)A420_12LE, (string)A420_12BE, (string)A444_10LE, (string)GBRA_10LE, (string)A444_10BE, (string)GBRA_10BE, (string)A422_10LE, (string)A422_10BE, (string)A420_10LE, (string)A420_10BE, (string)BGR10A2_LE, (string)RGB10A2_LE, (string)Y410, (string)A444, (string)GBRA, (string)AYUV, (string)VUYA, (string)RGBA, (string)RBGA, (string)ARGB, (string)BGRA, (string)ABGR, (string)A422, (string)A420, (string)AV12, (string)Y444_16LE, (string)GBR_16LE, (string)Y444_16BE, (string)GBR_16BE, (string)v216, (string)P016_LE, (string)P016_BE, (string)Y444_12LE, (string)GBR_12LE, (string)Y444_12BE, (string)GBR_12BE, (string)I422_12LE, (string)I422_12BE, (string)Y212_LE, (string)Y212_BE, (string)I420_12LE, (string)I420_12BE, (string)P012_LE, (string)P012_BE, (string)Y444_10LE, (string)GBR_10LE, (string)Y444_10BE, (string)GBR_10BE, (string)r210, (string)I422_10LE, (string)I422_10BE, (string)NV16_10LE32, (string)Y210, (string)UYVP, (string)v210, (string)I420_10LE, (string)I420_10BE, (string)P010_10LE, (string)NV12_10LE40, (string)NV12_10LE32, (string)P010_10BE, (string)MT2110R, (string)MT2110T, (string)NV12_10BE_8L128, (string)NV12_10LE40_4L4, (string)Y444, (string)BGRP, (string)GBR, (string)RGBP, (string)NV24, (string)v308, (string)IYU2, (string)RGBx, (string)xRGB, (string)BGRx, (string)xBGR, (string)RGB, (string)BGR, (string)Y42B, (string)NV16, (string)NV61, (string)YUY2, (string)YVYU, (string)UYVY, (string)VYUY, (string)I420, (string)YV12, (string)NV12, (string)NV21, (string)NV12_16L32S, (string)NV12_32L32, (string)NV12_4L4, (string)NV12_64Z32, (string)NV12_8L128, (string)Y41B, (string)IYU1, (string)YUV9, (string)YVU9, (string)BGR16, (string)RGB16, (string)BGR15, (string)RGB15, (string)RGB8P, (string)GRAY16_LE, (string)GRAY16_BE, (string)GRAY10_LE32, (string)GRAY8 }
+                  width: [ 1, 32767 ]
+                 height: [ 1, 32767 ]
+              framerate: [ 0/1, 2147483647/1 ]
+      video/x-raw(ANY)
+                 format: { (string)DMA_DRM, (string)A444_16LE, (string)A444_16BE, (string)AYUV64, (string)RGBA64_LE, (string)ARGB64, (string)ARGB64_LE, (string)BGRA64_LE, (string)ABGR64_LE, (string)RGBA64_BE, (string)ARGB64_BE, (string)BGRA64_BE, (string)ABGR64_BE, (string)A422_16LE, (string)A422_16BE, (string)A420_16LE, (string)A420_16BE, (string)A444_12LE, (string)GBRA_12LE, (string)A444_12BE, (string)GBRA_12BE, (string)Y412_LE, (string)Y412_BE, (string)A422_12LE, (string)A422_12BE, (string)A420_12LE, (string)A420_12BE, (string)A444_10LE, (string)GBRA_10LE, (string)A444_10BE, (string)GBRA_10BE, (string)A422_10LE, (string)A422_10BE, (string)A420_10LE, (string)A420_10BE, (string)BGR10A2_LE, (string)RGB10A2_LE, (string)Y410, (string)A444, (string)GBRA, (string)AYUV, (string)VUYA, (string)RGBA, (string)RBGA, (string)ARGB, (string)BGRA, (string)ABGR, (string)A422, (string)A420, (string)AV12, (string)Y444_16LE, (string)GBR_16LE, (string)Y444_16BE, (string)GBR_16BE, (string)v216, (string)P016_LE, (string)P016_BE, (string)Y444_12LE, (string)GBR_12LE, (string)Y444_12BE, (string)GBR_12BE, (string)I422_12LE, (string)I422_12BE, (string)Y212_LE, (string)Y212_BE, (string)I420_12LE, (string)I420_12BE, (string)P012_LE, (string)P012_BE, (string)Y444_10LE, (string)GBR_10LE, (string)Y444_10BE, (string)GBR_10BE, (string)r210, (string)I422_10LE, (string)I422_10BE, (string)NV16_10LE32, (string)Y210, (string)UYVP, (string)v210, (string)I420_10LE, (string)I420_10BE, (string)P010_10LE, (string)NV12_10LE40, (string)NV12_10LE32, (string)P010_10BE, (string)MT2110R, (string)MT2110T, (string)NV12_10BE_8L128, (string)NV12_10LE40_4L4, (string)Y444, (string)BGRP, (string)GBR, (string)RGBP, (string)NV24, (string)v308, (string)IYU2, (string)RGBx, (string)xRGB, (string)BGRx, (string)xBGR, (string)RGB, (string)BGR, (string)Y42B, (string)NV16, (string)NV61, (string)YUY2, (string)YVYU, (string)UYVY, (string)VYUY, (string)I420, (string)YV12, (string)NV12, (string)NV21, (string)NV12_16L32S, (string)NV12_32L32, (string)NV12_4L4, (string)NV12_64Z32, (string)NV12_8L128, (string)Y41B, (string)IYU1, (string)YUV9, (string)YVU9, (string)BGR16, (string)RGB16, (string)BGR15, (string)RGB15, (string)RGB8P, (string)GRAY16_LE, (string)GRAY16_BE, (string)GRAY10_LE32, (string)GRAY8 }
+                  width: [ 1, 32767 ]
+                 height: [ 1, 32767 ]
+              framerate: [ 0/1, 2147483647/1 ]
+
+Element has no clocking capabilities.
+Element has no URI handling capabilities.
+
+Pads:
+  SINK: 'sink'
+    Pad Template: 'sink'
+  SRC: 'src'
+    Pad Template: 'src'
+
+Element Properties:
+
+  add-borders         : Add black borders if necessary to keep the display aspect ratio
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
+  alpha-mode          : Alpha Mode to use
+                        flags: 可读, 可写
+                        Enum "GstVideoAlphaMode" Default: 0, "copy"
+                           (0): copy             - GST_VIDEO_ALPHA_MODE_COPY
+                           (1): set              - GST_VIDEO_ALPHA_MODE_SET
+                           (2): mult             - GST_VIDEO_ALPHA_MODE_MULT
+  
+  alpha-value         : Alpha Value to use
+                        flags: 可读, 可写
+                        Double. Range:               0 -               1 Default:               1 
+  
+  chroma-mode         : Chroma Resampling Mode
+                        flags: 可读, 可写
+                        Enum "GstVideoChromaMode" Default: 0, "full"
+                           (0): full             - GST_VIDEO_CHROMA_MODE_FULL
+                           (1): upsample-only    - GST_VIDEO_CHROMA_MODE_UPSAMPLE_ONLY
+                           (2): downsample-only  - GST_VIDEO_CHROMA_MODE_DOWNSAMPLE_ONLY
+                           (3): none             - GST_VIDEO_CHROMA_MODE_NONE
+  
+  chroma-resampler    : Chroma resampler method
+                        flags: 可读, 可写
+                        Enum "GstVideoResamplerMethod" Default: 1, "linear"
+                           (0): nearest          - GST_VIDEO_RESAMPLER_METHOD_NEAREST
+                           (1): linear           - GST_VIDEO_RESAMPLER_METHOD_LINEAR
+                           (2): cubic            - GST_VIDEO_RESAMPLER_METHOD_CUBIC
+                           (3): sinc             - GST_VIDEO_RESAMPLER_METHOD_SINC
+                           (4): lanczos          - GST_VIDEO_RESAMPLER_METHOD_LANCZOS
+  
+  converter-config    : A GstStructure describing the configuration that should be used. This configuration, if set, takes precedence over the other similar conversion properties.
+                        flags: 可读, 可写
+                        Boxed pointer of type "GstStructure"
+  
+  dither              : Apply dithering while converting
+                        flags: 可读, 可写
+                        Enum "GstVideoDitherMethod" Default: 4, "bayer"
+                           (0): none             - GST_VIDEO_DITHER_NONE
+                           (1): verterr          - GST_VIDEO_DITHER_VERTERR
+                           (2): floyd-steinberg  - GST_VIDEO_DITHER_FLOYD_STEINBERG
+                           (3): sierra-lite      - GST_VIDEO_DITHER_SIERRA_LITE
+                           (4): bayer            - GST_VIDEO_DITHER_BAYER
+  
+  dither-quantization : Quantizer to use
+                        flags: 可读, 可写
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 1 
+  
+  envelope            : Size of filter envelope
+                        flags: 可读, 可写
+                        Double. Range:               1 -               5 Default:               2 
+  
+  gamma-mode          : Gamma Conversion Mode
+                        flags: 可读, 可写
+                        Enum "GstVideoGammaMode" Default: 0, "none"
+                           (0): none             - GST_VIDEO_GAMMA_MODE_NONE
+                           (1): remap            - GST_VIDEO_GAMMA_MODE_REMAP
+  
+  matrix-mode         : Matrix Conversion Mode
+                        flags: 可读, 可写
+                        Enum "GstVideoMatrixMode" Default: 0, "full"
+                           (0): full             - GST_VIDEO_MATRIX_MODE_FULL
+                           (1): input-only       - GST_VIDEO_MATRIX_MODE_INPUT_ONLY
+                           (2): output-only      - GST_VIDEO_MATRIX_MODE_OUTPUT_ONLY
+                           (3): none             - GST_VIDEO_MATRIX_MODE_NONE
+  
+  method              : method
+                        flags: 可读, 可写
+                        Enum "GstVideoScaleMethod" Default: 1, "bilinear"
+                           (0): nearest-neighbour - Nearest Neighbour
+                           (1): bilinear         - Bilinear (2-tap)
+                           (2): 4-tap            - 4-tap Sinc
+                           (3): lanczos          - Lanczos
+                           (4): bilinear2        - Bilinear (multi-tap)
+                           (5): sinc             - Sinc (multi-tap)
+                           (6): hermite          - Hermite (multi-tap)
+                           (7): spline           - Spline (multi-tap)
+                           (8): catrom           - Catmull-Rom (multi-tap)
+                           (9): mitchell         - Mitchell (multi-tap)
+  
+  n-threads           : Maximum number of threads to use
+                        flags: 可读, 可写
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 1 
+  
+  name                : The name of the object
+                        flags: 可读, 可写
+                        String. Default: "videoconvert0"
+  
+  parent              : The parent of the object
+                        flags: 可读, 可写
+                        Object of type "GstObject"
+  
+  primaries-mode      : Primaries Conversion Mode
+                        flags: 可读, 可写
+                        Enum "GstVideoPrimariesMode" Default: 0, "none"
+                           (0): none             - GST_VIDEO_PRIMARIES_MODE_NONE
+                           (1): merge-only       - GST_VIDEO_PRIMARIES_MODE_MERGE_ONLY
+                           (2): fast             - GST_VIDEO_PRIMARIES_MODE_FAST
+  
+  qos                 : Handle Quality-of-Service events
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
+  sharpen             : Sharpening
+                        flags: 可读, 可写
+                        Double. Range:               0 -               1 Default:               0 
+  
+  sharpness           : Sharpness of filter
+                        flags: 可读, 可写
+                        Double. Range:             0.5 -             1.5 Default:               1 
+  

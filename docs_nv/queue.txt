@@ -1,0 +1,122 @@
+Factory Details:
+  Rank                     none (0)
+  Long-name                Queue
+  Klass                    Generic
+  Description              Simple data queue
+  Author                   Erik Walthinsen <omega@cse.ogi.edu>
+  Documentation            https://gstreamer.freedesktop.org/documentation/coreelements/queue.html
+
+Plugin Details:
+  Name                     coreelements
+  Description              GStreamer core elements
+  Filename                 /usr/lib/x86_64-linux-gnu/gstreamer-1.0/libgstcoreelements.so
+  Version                  1.24.2
+  License                  LGPL
+  Source module            gstreamer
+  Documentation            https://gstreamer.freedesktop.org/documentation/coreelements/
+  Source release date      2024-04-09
+  Binary package           GStreamer (Ubuntu)
+  Origin URL               https://launchpad.net/ubuntu/+source/gstreamer1.0
+
+GObject
+ +----GInitiallyUnowned
+       +----GstObject
+             +----GstElement
+                   +----GstQueue
+
+Pad Templates:
+  SINK template: 'sink'
+    Availability: Always
+    Capabilities:
+      ANY
+  
+  SRC template: 'src'
+    Availability: Always
+    Capabilities:
+      ANY
+
+Element has no clocking capabilities.
+Element has no URI handling capabilities.
+
+Pads:
+  SINK: 'sink'
+    Pad Template: 'sink'
+  SRC: 'src'
+    Pad Template: 'src'
+
+Element Properties:
+
+  current-level-buffers: Current number of buffers in the queue
+                        flags: 可读
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 0 
+  
+  current-level-bytes : Current amount of data in the queue (bytes)
+                        flags: 可读
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 0 
+  
+  current-level-time  : Current amount of data in the queue (in ns)
+                        flags: 可读
+                        Unsigned Integer64. Range: 0 - 18446744073709551615 Default: 0 
+  
+  flush-on-eos        : Discard all data in the queue when an EOS event is received
+                        flags: 可读, 可写, 可以在NULL、READY、PAUSED或PLAYING状态下改变
+                        Boolean. Default: false
+  
+  leaky               : Where the queue leaks, if at all
+                        flags: 可读, 可写, 可以在NULL、READY、PAUSED或PLAYING状态下改变
+                        Enum "GstQueueLeaky" Default: 0, "no"
+                           (0): no               - Not Leaky
+                           (1): upstream         - Leaky on upstream (new buffers)
+                           (2): downstream       - Leaky on downstream (old buffers)
+  
+  max-size-buffers    : Max. number of buffers in the queue (0=disable)
+                        flags: 可读, 可写, 可以在NULL、READY、PAUSED或PLAYING状态下改变
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 200 
+  
+  max-size-bytes      : Max. amount of data in the queue (bytes, 0=disable)
+                        flags: 可读, 可写, 可以在NULL、READY、PAUSED或PLAYING状态下改变
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 10485760 
+  
+  max-size-time       : Max. amount of data in the queue (in ns, 0=disable)
+                        flags: 可读, 可写, 可以在NULL、READY、PAUSED或PLAYING状态下改变
+                        Unsigned Integer64. Range: 0 - 18446744073709551615 Default: 1000000000 
+  
+  min-threshold-buffers: Min. number of buffers in the queue to allow reading (0=disable)
+                        flags: 可读, 可写, 可以在NULL、READY、PAUSED或PLAYING状态下改变
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 0 
+  
+  min-threshold-bytes : Min. amount of data in the queue to allow reading (bytes, 0=disable)
+                        flags: 可读, 可写, 可以在NULL、READY、PAUSED或PLAYING状态下改变
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 0 
+  
+  min-threshold-time  : Min. amount of data in the queue to allow reading (in ns, 0=disable)
+                        flags: 可读, 可写, 可以在NULL、READY、PAUSED或PLAYING状态下改变
+                        Unsigned Integer64. Range: 0 - 18446744073709551615 Default: 0 
+  
+  name                : The name of the object
+                        flags: 可读, 可写
+                        String. Default: "queue0"
+  
+  parent              : The parent of the object
+                        flags: 可读, 可写
+                        Object of type "GstObject"
+  
+  silent              : Don't emit queue signals
+                        flags: 可读, 可写, 可以在NULL、READY、PAUSED或PLAYING状态下改变
+                        Boolean. Default: false
+  
+
+Element Signals:
+
+  "underrun" :  void user_function (GstElement * object,
+                                    gpointer user_data);
+
+  "running" :  void user_function (GstElement * object,
+                                   gpointer user_data);
+
+  "overrun" :  void user_function (GstElement * object,
+                                   gpointer user_data);
+
+  "pushing" :  void user_function (GstElement * object,
+                                   gpointer user_data);
+

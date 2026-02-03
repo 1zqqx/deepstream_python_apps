@@ -1,0 +1,147 @@
+Factory Details:
+  Rank                     none (0)
+  Long-name                Nvdslogger
+  Klass                    Generic
+  Description              Pass data without modification
+  Author                   NVIDIA Corporation. Post on Deepstream forum for any queries @ https://devtalk.nvidia.com/default/board/209/
+
+Plugin Details:
+  Name                     nvdsgst_logger
+  Description              Gstreamer plugin for logging
+  Filename                 /usr/lib/x86_64-linux-gnu/gstreamer-1.0/deepstream/libnvdsgst_logger.so
+  Version                  8.0.0
+  License                  Proprietary
+  Source module            nvdslogger
+  Binary package           GStreamer nVidia logger Plugin
+  Origin URL               http://nvidia.com/
+
+GObject
+ +----GInitiallyUnowned
+       +----GstObject
+             +----GstElement
+                   +----GstBaseTransform
+                         +----GstNvdslogger
+
+Pad Templates:
+  SINK template: 'sink'
+    Availability: Always
+    Capabilities:
+      ANY
+  
+  SRC template: 'src'
+    Availability: Always
+    Capabilities:
+      ANY
+
+Element has no clocking capabilities.
+Element has no URI handling capabilities.
+
+Pads:
+  SINK: 'sink'
+    Pad Template: 'sink'
+  SRC: 'src'
+    Pad Template: 'src'
+
+Element Properties:
+
+  check-imperfect-offset: Send element messages if offset and offset_end do not match up
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  check-imperfect-timestamp: Send element messages if timestamps and durations do not match up
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  datarate            : (Re)timestamps buffers with number of bytes per second (0 = inactive)
+                        flags: 可读, 可写
+                        Integer. Range: 0 - 2147483647 Default: 0 
+  
+  drop-allocation     : Don't forward allocation queries
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  drop-buffer-flags   : Drop buffers with the given flags
+                        flags: 可读, 可写
+                        Flags "GstBufferFlags" Default: 0x00000000, "(none)"
+                           (0x00000010): live             - GST_BUFFER_FLAG_LIVE
+                           (0x00000020): decode-only      - GST_BUFFER_FLAG_DECODE_ONLY
+                           (0x00000040): discont          - GST_BUFFER_FLAG_DISCONT
+                           (0x00000080): resync           - GST_BUFFER_FLAG_RESYNC
+                           (0x00000100): corrupted        - GST_BUFFER_FLAG_CORRUPTED
+                           (0x00000200): marker           - GST_BUFFER_FLAG_MARKER
+                           (0x00000400): header           - GST_BUFFER_FLAG_HEADER
+                           (0x00000800): gap              - GST_BUFFER_FLAG_GAP
+                           (0x00001000): droppable        - GST_BUFFER_FLAG_DROPPABLE
+                           (0x00002000): delta-unit       - GST_BUFFER_FLAG_DELTA_UNIT
+                           (0x00004000): tag-memory       - GST_BUFFER_FLAG_TAG_MEMORY
+                           (0x00008000): sync-after       - GST_BUFFER_FLAG_SYNC_AFTER
+                           (0x00010000): non-droppable    - GST_BUFFER_FLAG_NON_DROPPABLE
+                           (0x00100000): last             - GST_BUFFER_FLAG_LAST
+  
+  drop-probability    : The Probability a buffer is dropped
+                        flags: 可读, 可写
+                        Float. Range:               0 -               1 Default:               0 
+  
+  dump                : Dump buffer contents to stdout
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  error-after         : Error after N buffers
+                        flags: 可读, 可写
+                        Integer. Range: -2147483648 - 2147483647 Default: -1 
+  
+  fps-measurement-interval-sec: Interval in seconds for which buffers will be counted and to be used for FPS calculation
+                        flags: 可读, 可写
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 5 
+  
+  last-message        : last-message
+                        flags: 可读
+                        String. Default: null
+  
+  latency             : Microseconds to delay initial packet
+                        flags: 可读, 可写
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 0 
+  
+  name                : The name of the object
+                        flags: 可读, 可写
+                        String. Default: "nvdslogger0"
+  
+  parent              : The parent of the object
+                        flags: 可读, 可写
+                        Object of type "GstObject"
+  
+  qos                 : Handle Quality-of-Service events
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  signal-handoffs     : Send a signal before pushing the buffer
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
+  silent              : silent
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
+  single-segment      : Timestamp buffers and eat segments so as to appear as one segment
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  sleep-time          : Microseconds to sleep between processing
+                        flags: 可读, 可写
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 0 
+  
+  sync                : Synchronize to pipeline clock
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  ts-offset           : Timestamp offset in nanoseconds for synchronisation, negative for earlier sync
+                        flags: 可读, 可写
+                        Integer64. Range: -9223372036854775808 - 9223372036854775807 Default: 0 
+  
+
+Element Signals:
+
+  "handoff" :  void user_function (GstElement * object,
+                                   GstBuffer * arg0,
+                                   gpointer user_data);
+

@@ -1,0 +1,129 @@
+Factory Details:
+  Rank                     primary (256)
+  Long-name                NvTracker plugin
+  Klass                    NvTracker functionality
+  Description              Gstreamer object tracking element
+  Author                   NVIDIA Corporation. Post on Deepstream SDK forum for any queries @ https://devtalk.nvidia.com/default/board/209/
+
+Plugin Details:
+  Name                     nvdsgst_tracker
+  Description              Gstreamer plugin to track the objects
+  Filename                 /usr/lib/x86_64-linux-gnu/gstreamer-1.0/deepstream/libnvdsgst_tracker.so
+  Version                  8.0.0
+  License                  Proprietary
+  Source module            nvtracker
+  Binary package           GStreamer nvtracker Plugin
+  Origin URL               http://nvidia.com/
+
+GObject
+ +----GInitiallyUnowned
+       +----GstObject
+             +----GstElement
+                   +----GstBaseTransform
+                         +----GstNvTracker
+
+Pad Templates:
+  SINK template: 'sink'
+    Availability: Always
+    Capabilities:
+      video/x-raw(memory:NVMM)
+                 format: { (string)I420, (string)NV12, (string)RGBA }
+                  width: [ 1, 2147483647 ]
+                 height: [ 1, 2147483647 ]
+              framerate: [ 0/1, 2147483647/1 ]
+  
+  SRC template: 'src'
+    Availability: Always
+    Capabilities:
+      video/x-raw(memory:NVMM)
+                 format: { (string)I420, (string)NV12, (string)RGBA }
+                  width: [ 1, 2147483647 ]
+                 height: [ 1, 2147483647 ]
+              framerate: [ 0/1, 2147483647/1 ]
+
+Element has no clocking capabilities.
+Element has no URI handling capabilities.
+
+Pads:
+  SINK: 'sink'
+    Pad Template: 'sink'
+  SRC: 'src'
+    Pad Template: 'src'
+
+Element Properties:
+
+  compute-hw          : Compute Scaling HW
+                        flags: 可读, 可写, 可控制
+                        Enum "GstNvComputeHWType" Default: 0, "Default"
+                           (0): Default          - Default, GPU for Tesla, VIC for Jetson
+                           (1): GPU              - GPU
+                           (2): VIC              - VIC
+  
+  display-tracking-id : Display tracking id in object text
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
+  gpu-id              : Set GPU Device ID
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 0 
+  
+  input-tensor-meta   : Use preprocess tensormeta if available for tensor-meta-gie-id
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  ll-config-file      : Low-level library config file path
+                        flags: 可读, 可写
+                        String. Default: null
+  
+  ll-lib-file         : Low-level library file path
+                        flags: 可读, 可写
+                        String. Default: null
+  
+  name                : The name of the object
+                        flags: 可读, 可写
+                        String. Default: "nvtracker0"
+  
+  parent              : The parent of the object
+                        flags: 可读, 可写
+                        Object of type "GstObject"
+  
+  qos                 : Handle Quality-of-Service events
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  sub-batch-err-recovery-trial-cnt: Number of max. trials to reinitialize the low level tracker library
+			of a sub-batch in case of a processing failure. -1 corresponds to infinite trials.
+                        flags: 可读, 可写
+                        Integer. Range: -1 - 2147483647 Default: 0 
+  
+  sub-batches         : Configuration of sub-batches. Can be specified in 2 ways.
+			Option 1 : List of sub-batches (seperated by ;).  
+			Each sub-batch contains list of source ids in that batch (seperated by ,) 
+			Option 2 : List of sub-batch sizes seperated by :
+                        flags: 可读, 可写
+                        String. Default: ""
+  
+  tensor-meta-gie-id  : Tensor Meta GIE ID to be used, property valid only if input-tensor-meta is TRUE
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 0 
+  
+  tracker-height      : Frame height at which the tracker should operate, in pixels
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 544 
+  
+  tracker-width       : Frame width at which the tracker should operate, in pixels
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 960 
+  
+  tracking-id-reset-mode: Tracking ID reset mode when stream reset or EOS happens
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Unsigned Integer. Range: 0 - 3 Default: 1 
+  
+  tracking-surface-type: Set Tracking Surface Type, default is ALL,        (1) => SPOT Surface, (2) => AISLE Surface
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 0 
+  
+  user-meta-pool-size : Tracker user meta buffer pool size
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Unsigned Integer. Range: 1 - 4294967295 Default: 32 
+  

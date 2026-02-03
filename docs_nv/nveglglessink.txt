@@ -1,0 +1,181 @@
+Factory Details:
+  Rank                     secondary (128)
+  Long-name                EGL/GLES vout Sink
+  Klass                    Sink/Video
+  Description              An EGL/GLES Video Output Sink Implementing the VideoOverlay interface
+  Author                   Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>, Sebastian Dröge <sebastian.droege@collabora.co.uk>
+  Documentation            https://gstreamer.freedesktop.org/documentation/nvdsgst_eglglessink/#nveglglessink-page
+
+Plugin Details:
+  Name                     nvdsgst_eglglessink
+  Description              EGL/GLES sink
+  Filename                 /usr/lib/x86_64-linux-gnu/gstreamer-1.0/deepstream/libnvdsgst_eglglessink.so
+  Version                  8.0.0
+  License                  LGPL
+  Source module            gst-plugins-bad
+  Documentation            https://gstreamer.freedesktop.org/documentation/nvdsgst_eglglessink/
+  Source release date      2014-02-08
+  Binary package           GStreamer Bad Plug-ins source release
+  Origin URL               Unknown package origin
+
+GObject
+ +----GInitiallyUnowned
+       +----GstObject
+             +----GstElement
+                   +----GstBaseSink
+                         +----GstVideoSink
+                               +----GstEglGlesSink
+
+实现的接口:
+  GstVideoOverlay
+
+Pad Templates:
+  SINK template: 'sink'
+    Availability: Always
+    Capabilities:
+      video/x-raw(memory:EGLImage)
+                 format: { (string)RGBA, (string)BGRA, (string)ARGB, (string)ABGR, (string)RGBx, (string)BGRx, (string)xRGB, (string)xBGR, (string)AYUV, (string)Y444, (string)I420, (string)YV12, (string)NV12, (string)NV21, (string)Y42B, (string)Y41B, (string)RGB, (string)BGR, (string)RGB16 }
+                  width: [ 1, 2147483647 ]
+                 height: [ 1, 2147483647 ]
+              framerate: [ 0/1, 2147483647/1 ]
+      video/x-raw(meta:GstVideoGLTextureUploadMeta)
+                 format: { (string)RGBA, (string)BGRA, (string)ARGB, (string)ABGR, (string)RGBx, (string)BGRx, (string)xRGB, (string)xBGR, (string)AYUV, (string)Y444, (string)I420, (string)YV12, (string)NV12, (string)NV21, (string)Y42B, (string)Y41B, (string)RGB, (string)BGR, (string)RGB16 }
+                  width: [ 1, 2147483647 ]
+                 height: [ 1, 2147483647 ]
+              framerate: [ 0/1, 2147483647/1 ]
+      video/x-raw
+                 format: { (string)RGBA, (string)BGRA, (string)ARGB, (string)ABGR, (string)RGBx, (string)BGRx, (string)xRGB, (string)xBGR, (string)AYUV, (string)Y444, (string)I420, (string)YV12, (string)NV12, (string)NV21, (string)Y42B, (string)Y41B, (string)RGB, (string)BGR, (string)RGB16 }
+                  width: [ 1, 2147483647 ]
+                 height: [ 1, 2147483647 ]
+              framerate: [ 0/1, 2147483647/1 ]
+      video/x-raw(memory:NVMM)
+                 format: { (string)BGRx, (string)RGBA, (string)I420, (string)NV12, (string)BGR, (string)RGB }
+                  width: [ 1, 2147483647 ]
+                 height: [ 1, 2147483647 ]
+              framerate: [ 0/1, 2147483647/1 ]
+
+Element has no clocking capabilities.
+Element has no URI handling capabilities.
+
+Pads:
+  SINK: 'sink'
+    Pad Template: 'sink'
+
+Element Properties:
+
+  async               : Go asynchronously to PAUSED
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
+  blocksize           : Size in bytes to pull per buffer (0 = default)
+                        flags: 可读, 可写
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 4096 
+  
+  columns             : Columns of display
+                        flags: 可读, 可写
+                        Unsigned Integer. Range: 1 - 2147483647 Default: 1 
+  
+  create-window       : If set to true, the sink will attempt to create it's own window to render to if none is provided. This is currently only supported when the sink is used under X11
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
+  display             : If set, the sink will use the passed X Display for rendering
+                        flags: 可读, 可写
+                        Pointer.
+  
+  do-transform        : Enable fallback path for transform
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
+  enable-last-sample  : Enable the last-sample property
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
+  force-aspect-ratio  : If set to true, the sink will attempt to preserve the incoming frame's geometry while scaling, taking both the storage's and display's pixel aspect ratio into account
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
+  gpu-id              : Set GPU Device ID
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 0 
+  
+  last-sample         : The last sample received in the sink
+                        flags: 可读
+                        Boxed pointer of type "GstSample"
+  
+  max-bitrate         : The maximum bits per second to render (0 = disabled)
+                        flags: 可读, 可写
+                        Unsigned Integer64. Range: 0 - 18446744073709551615 Default: 0 
+  
+  max-lateness        : Maximum number of nanoseconds that a buffer can be late before it is dropped (-1 unlimited)
+                        flags: 可读, 可写
+                        Integer64. Range: -1 - 9223372036854775807 Default: 5000000 
+  
+  name                : The name of the object
+                        flags: 可读, 可写
+                        String. Default: "eglglessink0"
+  
+  parent              : The parent of the object
+                        flags: 可读, 可写
+                        Object of type "GstObject"
+  
+  processing-deadline : Maximum processing time for a buffer in nanoseconds
+                        flags: 可读, 可写
+                        Unsigned Integer64. Range: 0 - 18446744073709551615 Default: 15000000 
+  
+  profile             : gsteglglessink jitter information
+                        flags: 可读, 可写
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 0 
+  
+  qos                 : Generate Quality-of-Service events upstream
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
+  render-delay        : Additional render delay of the sink in nanoseconds
+                        flags: 可读, 可写
+                        Unsigned Integer64. Range: 0 - 18446744073709551615 Default: 0 
+  
+  rows                : Rows of Display
+                        flags: 可读, 可写
+                        Unsigned Integer. Range: 1 - 2147483647 Default: 1 
+  
+  show-preroll-frame  : Whether to render video frames during preroll
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
+  stats               : Sink Statistics
+                        flags: 可读
+                        Boxed pointer of type "GstStructure"
+                                                        average-rate: 0
+                                                             dropped: 0
+                                                            rendered: 0
+
+  
+  sync                : Sync on the clock
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
+  throttle-time       : The time to keep between rendered buffers (0 = disabled)
+                        flags: 可读, 可写
+                        Unsigned Integer64. Range: 0 - 18446744073709551615 Default: 0 
+  
+  ts-offset           : Timestamp offset in nanoseconds
+                        flags: 可读, 可写
+                        Integer64. Range: -9223372036854775808 - 9223372036854775807 Default: 0 
+  
+  window-height       : Height of window
+                        flags: 可读, 可写
+                        Unsigned Integer. Range: 0 - 2147483647 Default: 0 
+  
+  window-width        : Width of window
+                        flags: 可读, 可写
+                        Unsigned Integer. Range: 0 - 2147483647 Default: 0 
+  
+  window-x            : X coordinate of window
+                        flags: 可读, 可写
+                        Unsigned Integer. Range: 0 - 2147483647 Default: 10 
+  
+  window-y            : Y coordinate of window
+                        flags: 可读, 可写
+                        Unsigned Integer. Range: 0 - 2147483647 Default: 10 
+  

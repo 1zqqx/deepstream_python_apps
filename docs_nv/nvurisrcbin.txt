@@ -1,0 +1,285 @@
+Factory Details:
+  Rank                     primary (256)
+  Long-name                NvUriSrc Bin
+  Klass                    NvUriSrc Bin
+  Description              Nvidia DeepStreamSDK NvUriSrc Bin
+  Author                   NVIDIA Corporation. Post on Deepstream for Tesla forum for any queries @ https://devtalk.nvidia.com/default/board/209/
+
+Plugin Details:
+  Name                     nvdsgst_nvurisrcbin
+  Description              Deepstream SDK nvurisrcbin Bin
+  Filename                 /usr/lib/x86_64-linux-gnu/gstreamer-1.0/deepstream/libnvdsgst_nvurisrcbin.so
+  Version                  8.0.0
+  License                  Proprietary
+  Source module            DeepStream SDK nvurisrcbin Bin
+  Binary package           Deepstream SDK nvurisrcbin Bin
+  Origin URL               http://nvidia.com/
+
+GObject
+ +----GInitiallyUnowned
+       +----GstObject
+             +----GstElement
+                   +----GstBin
+                         +----GstDsNvUriSrcBin
+
+实现的接口:
+  GstChildProxy
+
+Pad Templates:
+  SRC template: 'asrc_%u'
+    Availability: Sometimes
+    Capabilities:
+      audio/x-raw
+                 format: { (string)F64LE, (string)F64BE, (string)F32LE, (string)F32BE, (string)S32LE, (string)S32BE, (string)U32LE, (string)U32BE, (string)S24_32LE, (string)S24_32BE, (string)U24_32LE, (string)U24_32BE, (string)S24LE, (string)S24BE, (string)U24LE, (string)U24BE, (string)S20LE, (string)S20BE, (string)U20LE, (string)U20BE, (string)S18LE, (string)S18BE, (string)U18LE, (string)U18BE, (string)S16LE, (string)S16BE, (string)U16LE, (string)U16BE, (string)S8, (string)U8 }
+                   rate: [ 1, 2147483647 ]
+               channels: [ 1, 2147483647 ]
+  
+  SRC template: 'vsrc_%u'
+    Availability: Sometimes
+    Capabilities:
+      video/x-raw(memory:NVMM)
+                 format: { (string)I420, (string)NV12, (string)P010_10LE, (string)BGRx, (string)RGBA, (string)GRAY8 }
+                  width: [ 1, 2147483647 ]
+                 height: [ 1, 2147483647 ]
+              framerate: [ 0/1, 2147483647/1 ]
+      video/x-raw
+                 format: { (string)I420, (string)P010_10LE, (string)NV12, (string)BGRx, (string)RGBA, (string)GRAY8 }
+                  width: [ 1, 2147483647 ]
+                 height: [ 1, 2147483647 ]
+              framerate: [ 0/1, 2147483647/1 ]
+
+Element has no clocking capabilities.
+Element has no URI handling capabilities.
+
+Pads:
+  none
+
+Element Properties:
+
+  async-handling      : The bin will handle Asynchronous state changes
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
+  buffer-mode         : Control the buffering algorithm in use
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Enum "BufferMode" Default: 3, "auto"
+                           (0): unknown          - Only use RTP timestamps
+                           (1): slave            - Slave receiver to sender clock
+                           (2): buffer           - Do low/high watermark buffering
+                           (3): auto             - Choose mode depending on stream live
+                           (4): synced           - Synchronized sender and receiver clocks
+  
+  cudadec-memtype     : Set to specify memory type for cuda decoder buffers
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Enum "GstNvUriSrcBinCudaDecMemType" Default: 0, "memtype_device"
+                           (0): memtype_device   - Memory type Device
+                           (1): memtype_pinned   - Memory type Host Pinned
+                           (2): memtype_unified  - Memory type Unified
+  
+  dec-skip-frames     : Type of frames to skip during decoding
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Enum "SkipFrames" Default: 0, "decode_all"
+                           (0): decode_all       - Decode all frames
+                           (1): decode_non_ref   - Decode non-ref frames
+                           (2): decode_key       - decode key frames
+  
+  disable-audio       : Disable audio path mode at init time
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
+  disable-passthrough : Disable passthrough mode at init time, applicable for nvvideoconvert only.
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
+  drop-frame-interval : Interval to drop the frames,ex: value of 5 means every 5th frame will be given by decoder, rest all dropped
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Unsigned Integer. Range: 0 - 30 Default: 0 
+  
+  drop-on-latency     : Tells the jitterbuffer to never exceed the given latency in size
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
+  extract-sei-type5-data: Set to extract and attach SEI type5 unregistered data on output buffer
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  file-loop           : Loop file sources after EOS. Src type must be source-type-uri and uri starting with 'file:/'
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  gpu-id              : Set GPU Device ID
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 0 
+  
+  init-rtsp-reconnect-interval: Timeout in seconds to wait before forcing a reconnection when error received from rtsp source. 0=disable timeout
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 0 
+  
+  ipc-buffer-timestamp-copy: Copy buffer timestamp for nvunixfdsrc plugin
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  ipc-connection-attempts: Max number of attempts for connection (-1 = unlimited)
+                        flags: 可读, 可写
+                        Integer. Range: -1 - 2147483647 Default: -1 
+  
+  ipc-connection-interval: connection interval between connection attempts in micro seconds
+                        flags: 可读, 可写
+                        Unsigned Integer64. Range: 0 - 18446744073709551615 Default: 1000000 
+  
+  ipc-socket-path     : The path to the control socket used to control the shared memory transport. This may be modified during the NULL->READY transition
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        String. Default: null
+  
+  latency             : Jitterbuffer size in milliseconds; applicable only for RTSP streams.
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 100 
+  
+  leaky               : Where the queue leaks, if at all
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Enum "Leaky" Default: 0, "no-leak"
+                           (0): no-leak          - No Leak
+                           (1): upstream-leak    - Upstream Leak
+                           (2): downstream-leak  - Downstream Leak
+  
+  low-latency-mode    : Set low latency mode for bitstreams having I and IPPP frames on decoder
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  max-size-buffers    : Maximum number of buffers in the queue
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 200 
+  
+  message-forward     : Forwards all children messages
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  name                : The name of the object
+                        flags: 可读, 可写
+                        String. Default: "dsnvurisrcbin0"
+  
+  num-extra-surfaces  : Number of surfaces in addition to minimum decode surfaces given by the decoder
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 1 
+  
+  parent              : The parent of the object
+                        flags: 可读, 可写
+                        Object of type "GstObject"
+  
+  rtsp-reconnect-attempts: Set rtsp reconnect attempt value
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Integer. Range: -2147483648 - 2147483647 Default: -1 
+  
+  rtsp-reconnect-interval: Timeout in seconds to wait since last data was received from an RTSP source before forcing a reconnection. 0=disable timeout
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 0 
+  
+  sei-uuid            : Set sei uuid on decoder
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        String. Default: null
+  
+  select-rtp-protocol : Transport Protocol to use for RTP
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Enum "RtpProtocol" Default: 7, "rtp-udp-udpmcast-tcp"
+                           (0): rtp-unknown      - unknown
+                           (1): rtp-udp          - udp
+                           (2): rtp-udp-mcast    - udp-mcast
+                           (4): rtp-tcp          - tcp
+                           (7): rtp-udp-udpmcast-tcp - udp-udpmcast-tcp
+                           (10): rtp-http         - http
+                           (20): rtp-tls          - tls
+  
+  smart-rec-cache     : Size of cache in seconds, applies to both audio and video cache
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 0 
+  
+  smart-rec-container : Container format of recorded video. MP4 and MKV containers are supported. Sources must be of type source-type-rtsp
+                        flags: 可读, 可写
+                        Enum "SmartRecordContainerType" Default: 0, "smart-rec-mp4"
+                           (0): smart-rec-mp4    - MP4 container
+                           (1): smart-rec-mkv    - MKV container
+  
+  smart-rec-default-duration: In case a Stop event is not generated. This parameter will ensure the recording is stopped after a predefined default duration.
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 20 
+  
+  smart-rec-dir-path  : Path of directory to save the recorded file.
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        String. Default: null
+  
+  smart-rec-file-prefix: By default, Smart_Record is the prefix. For unique file names every source must be provided with a unique prefix
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        String. Default: "Smart_Record"
+  
+  smart-rec-mode      : Smart record mode
+                        flags: 可读, 可写
+                        Enum "SmartRecordMode" Default: 0, "smart-rec-mode-av"
+                           (0): smart-rec-mode-av - Record audio and video if available
+                           (1): smart-rec-mode-video - Record video only if available
+                           (2): smart-rec-mode-audio - Record audio only if available
+  
+  smart-rec-status    : Boolean indicating if SR is currently
+                        flags: 可读
+                        Boolean. Default: false
+  
+  smart-rec-video-cache: Size of video cache in seconds. DEPRECATED: Use 'smart-rec-cache' instead
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 0 
+  
+  smart-record        : Enable Smart Record and choose the type of events to respond to. Sources must be of type source-type-rtsp
+                        flags: 可读, 可写
+                        Enum "SmartRecordType" Default: 0, "smart-rec-disable"
+                           (0): smart-rec-disable - Disable Smart Record
+                           (1): smart-rec-cloud  - Trigger Smart Record through cloud messages only
+                           (2): smart-rec-multi  - Trigger Smart Record through cloud and local events
+  
+  source-id           : Unique ID for the input source
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Integer. Range: -1 - 2147483647 Default: -1 
+  
+  type                : Set the type of source. Use source-type-rtsp to use smart record features
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Enum "GstNvSourceType" Default: 0, "auto"
+                           (0): auto             - Select source type based on URI scheme
+                           (1): uri              - Supports any URI supported by GStreamer
+                           (2): rtsp             - Customize for RTSP, supports smart recording
+  
+  udp-buffer-size     : UDP Buffer Size in bytes; applicable only for RTSP streams.
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 524288 
+  
+  uri                 : URI of the file or rtsp source
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        String. Default: null
+  
+
+Element Signals:
+
+  "pad-added" :  void user_function (GstElement * object,
+                                     GstPad * arg0,
+                                     gpointer user_data);
+
+  "pad-removed" :  void user_function (GstElement * object,
+                                       GstPad * arg0,
+                                       gpointer user_data);
+
+  "no-more-pads" :  void user_function (GstElement * object,
+                                        gpointer user_data);
+
+  "sr-done" :  void user_function (GstElement * object,
+                                   gpointer arg0,
+                                   gpointer arg1,
+                                   gpointer user_data);
+
+
+Element Actions:
+
+  "start-sr" -> void  :  g_signal_emit_by_name (element, "start-sr",
+                                                gpointer arg0,
+                                                guint arg1,
+                                                guint arg2,
+                                                gpointer arg3);
+
+  "stop-sr" -> void  :  g_signal_emit_by_name (element, "stop-sr",
+                                               guint arg0);
+
