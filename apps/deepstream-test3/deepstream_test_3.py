@@ -18,14 +18,16 @@
 ################################################################################
 
 import sys
-sys.path.append('../')
+
+sys.path.append("../")
 from pathlib import Path
 from os import environ
 import gi
 import configparser
 import argparse
-gi.require_version('Gst', '1.0')
-from gi.repository import GLib, Gst
+
+gi.require_version("Gst", "1.0")
+from gi.repository import GLib, Gst  # type: ignore
 from ctypes import *
 import time
 import sys
@@ -43,26 +45,27 @@ file_loop = False
 perf_data = None
 measure_latency = False
 
-MAX_DISPLAY_LEN=64
+MAX_DISPLAY_LEN = 64
 PGIE_CLASS_ID_VEHICLE = 0
 PGIE_CLASS_ID_BICYCLE = 1
 PGIE_CLASS_ID_PERSON = 2
 PGIE_CLASS_ID_ROADSIGN = 3
-MUXER_OUTPUT_WIDTH=1920
-MUXER_OUTPUT_HEIGHT=1080
+MUXER_OUTPUT_WIDTH = 1920
+MUXER_OUTPUT_HEIGHT = 1080
 MUXER_BATCH_TIMEOUT_USEC = 33000
-TILED_OUTPUT_WIDTH=1280
-TILED_OUTPUT_HEIGHT=720
-GST_CAPS_FEATURES_NVMM="memory:NVMM"
-OSD_PROCESS_MODE= 0
-OSD_DISPLAY_TEXT= 1
-pgie_classes_str= ["Vehicle", "TwoWheeler", "Person","RoadSign"]
+TILED_OUTPUT_WIDTH = 1280
+TILED_OUTPUT_HEIGHT = 720
+GST_CAPS_FEATURES_NVMM = "memory:NVMM"
+OSD_PROCESS_MODE = 0
+OSD_DISPLAY_TEXT = 1
+pgie_classes_str = ["Vehicle", "TwoWheeler", "Person", "RoadSign"]
+
 
 # pgie_src_pad_buffer_probe  will extract metadata received on tiler sink pad
 # and update params for drawing rectangle, object information etc.
-def pgie_src_pad_buffer_probe(pad,info,u_data):
-    frame_number=0
-    num_rects=0
+def pgie_src_pad_buffer_probe(pad, info, u_data):
+    frame_number = 0
+    num_rects = 0
     got_fps = False
     gst_buffer = info.get_buffer()
     if not gst_buffer:
@@ -79,7 +82,9 @@ def pgie_src_pad_buffer_probe(pad,info,u_data):
     if measure_latency:
         num_sources_in_batch = pyds.nvds_measure_buffer_latency(hash(gst_buffer))
         if num_sources_in_batch == 0:
-            print("Unable to get number of sources in GstBuffer for latency measurement")
+            print(
+                "Unable to get number of sources in GstBuffer for latency measurement"
+            )
 
     batch_meta = pyds.gst_buffer_get_nvds_batch_meta(hash(gst_buffer))
     l_frame = batch_meta.frame_meta_list
@@ -94,28 +99,37 @@ def pgie_src_pad_buffer_probe(pad,info,u_data):
         except StopIteration:
             break
 
-        frame_number=frame_meta.frame_num
-        l_obj=frame_meta.obj_meta_list
+        frame_number = frame_meta.frame_num
+        l_obj = frame_meta.obj_meta_list
         num_rects = frame_meta.num_obj_meta
         obj_counter = {
-        PGIE_CLASS_ID_VEHICLE:0,
-        PGIE_CLASS_ID_PERSON:0,
-        PGIE_CLASS_ID_BICYCLE:0,
-        PGIE_CLASS_ID_ROADSIGN:0
+            PGIE_CLASS_ID_VEHICLE: 0,
+            PGIE_CLASS_ID_PERSON: 0,
+            PGIE_CLASS_ID_BICYCLE: 0,
+            PGIE_CLASS_ID_ROADSIGN: 0,
         }
         while l_obj is not None:
-            try: 
+            try:
                 # Casting l_obj.data to pyds.NvDsObjectMeta
-                obj_meta=pyds.NvDsObjectMeta.cast(l_obj.data)
+                obj_meta = pyds.NvDsObjectMeta.cast(l_obj.data)
             except StopIteration:
                 break
             obj_counter[obj_meta.class_id] += 1
-            try: 
-                l_obj=l_obj.next
+            try:
+                l_obj = l_obj.next
             except StopIteration:
                 break
         if not silent:
-            print("Frame Number=", frame_number, "Number of Objects=",num_rects,"Vehicle_count=",obj_counter[PGIE_CLASS_ID_VEHICLE],"Person_count=",obj_counter[PGIE_CLASS_ID_PERSON])
+            print(
+                "Frame Number=",
+                frame_number,
+                "Number of Objects=",
+                num_rects,
+                "Vehicle_count=",
+                obj_counter[PGIE_CLASS_ID_VEHICLE],
+                "Person_count=",
+                obj_counter[PGIE_CLASS_ID_PERSON],
+            )
 
         # Update frame rate through this probe
         stream_index = "stream{0}".format(frame_meta.pad_index)
@@ -123,99 +137,135 @@ def pgie_src_pad_buffer_probe(pad,info,u_data):
         perf_data.update_fps(stream_index)
 
         try:
-            l_frame=l_frame.next
+            l_frame = l_frame.next
         except StopIteration:
             break
 
     return Gst.PadProbeReturn.OK
 
 
-
-def cb_newpad(decodebin, decoder_src_pad,data):
+# handler func args (?,?,?)
+def cb_newpad(decodebin, decoder_src_pad, data):
     print("In cb_newpad\n")
-    caps=decoder_src_pad.get_current_caps()
+    caps = decoder_src_pad.get_current_caps()
     if not caps:
         caps = decoder_src_pad.query_caps()
-    gststruct=caps.get_structure(0)
-    gstname=gststruct.get_name()
-    source_bin=data
-    features=caps.get_features(0)
+    gststruct = caps.get_structure(0)
+    gstname = gststruct.get_name()
+    source_bin = data
+    features = caps.get_features(0)
 
     # Need to check if the pad created by the decodebin is for video and not
     # audio.
-    print("gstname=",gstname)
-    if(gstname.find("video")!=-1):
+    print("gstname=", gstname)
+    if gstname.find("video") != -1:
         # Link the decodebin pad only if decodebin has picked nvidia
         # decoder plugin nvdec_*. We do this by checking if the pad caps contain
         # NVMM memory features.
-        print("features=",features)
+        print("features=", features)
         if features.contains("memory:NVMM"):
             # Get the source bin ghost pad
-            bin_ghost_pad=source_bin.get_static_pad("src")
+            bin_ghost_pad = source_bin.get_static_pad("src")
             if not bin_ghost_pad.set_target(decoder_src_pad):
-                sys.stderr.write("Failed to link decoder src pad to source bin ghost pad\n")
+                sys.stderr.write(
+                    "Failed to link decoder src pad to source bin ghost pad\n"
+                )
         else:
             sys.stderr.write(" Error: Decodebin did not pick nvidia decoder plugin.\n")
 
-def decodebin_child_added(child_proxy,Object,name,user_data):
+
+# ?????
+def decodebin_child_added(child_proxy, Object, name, user_data):
     print("Decodebin child added:", name, "\n")
-    if(name.find("decodebin") != -1):
-        Object.connect("child-added",decodebin_child_added,user_data)
+    if name.find("decodebin") != -1:
+        Object.connect("child-added", decodebin_child_added, user_data)
 
     if "source" in name:
         source_element = child_proxy.get_by_name("source")
-        if source_element.find_property('drop-on-latency') != None:
+        if source_element.find_property("drop-on-latency") != None:
             Object.set_property("drop-on-latency", True)
 
 
-
-def create_source_bin(index,uri):
-    print("Creating source bin")
+# 每个视频源 一个 Gst.Bin
+def create_source_bin(index, uri):
+    print(f"===> Creating {index} source bin")
+    print(f"\t {index} - {uri}")
 
     # Create a source GstBin to abstract this bin's content from the rest of the
     # pipeline
-    bin_name="source-bin-%02d" %index
-    print(bin_name)
-    nbin=Gst.Bin.new(bin_name)
-    if not nbin:
+    bin_name = f"source-bin-{index:02}"
+    print(f"\t {bin_name}")
+    new_bin = Gst.Bin.new(bin_name)
+    if not new_bin:
         sys.stderr.write(" Unable to create source bin \n")
 
     # Source element for reading from the uri.
     # We will use decodebin and let it figure out the container format of the
     # stream and the codec and plug the appropriate demux and decode plugins.
     if file_loop:
-        # use nvurisrcbin to enable file-loop
-        uri_decode_bin=Gst.ElementFactory.make("nvurisrcbin", "uri-decode-bin")
+        # use nvurisrcbin to enable file-loop, Not necessary
+        uri_decode_bin = Gst.ElementFactory.make("nvurisrcbin", "uri-decode-bin")
+        """
+        file-loop           : Loop file sources after EOS. Src type must be source-type-uri and uri starting with 'file:/'
+                        flags: 可读, 可写
+                        Boolean. Default: false
+        """
         uri_decode_bin.set_property("file-loop", 1)
+        """
+        cudadec-memtype     : Set to specify memory type for cuda decoder buffers
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Enum "GstNvUriSrcBinCudaDecMemType" Default: 0, "memtype_device"
+                           (0): memtype_device   - Memory type Device
+                           (1): memtype_pinned   - Memory type Host Pinned
+                           (2): memtype_unified  - Memory type Unified
+        """
         uri_decode_bin.set_property("cudadec-memtype", 0)
     else:
-        uri_decode_bin=Gst.ElementFactory.make("uridecodebin", "uri-decode-bin")
+        uri_decode_bin = Gst.ElementFactory.make("uridecodebin", "uri-decode-bin")
+
     if not uri_decode_bin:
         sys.stderr.write(" Unable to create uri decode bin \n")
+
     # We set the input uri to the source element
-    uri_decode_bin.set_property("uri",uri)
+    """
+    nvurisrcbin:
+    uri                 : URI of the file or rtsp source
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        String. Default: null
+    uridecodebin:
+    uri                 : URI to decode
+                        flags: 可读, 可写
+                        String. Default: null
+    """
+    uri_decode_bin.set_property("uri", uri)
+
     # Connect to the "pad-added" signal of the decodebin which generates a
     # callback once a new pad for raw data has beed created by the decodebin
-    uri_decode_bin.connect("pad-added",cb_newpad,nbin)
-    uri_decode_bin.connect("child-added",decodebin_child_added,nbin)
+    uri_decode_bin.connect("pad-added", cb_newpad, new_bin)
+    # "child-added" 什么信号 ???
+    uri_decode_bin.connect("child-added", decodebin_child_added, new_bin)
 
     # We need to create a ghost pad for the source bin which will act as a proxy
     # for the video decoder src pad. The ghost pad will not have a target right
     # now. Once the decode bin creates the video decoder and generates the
     # cb_newpad callback, we will set the ghost pad target to the video decoder
     # src pad.
-    Gst.Bin.add(nbin,uri_decode_bin)
-    bin_pad=nbin.add_pad(Gst.GhostPad.new_no_target("src",Gst.PadDirection.SRC))
+    Gst.Bin.add(new_bin, uri_decode_bin)
+
+    # ***** Gst.GhostPad Bin 的出口 *****
+    bin_pad = new_bin.add_pad(Gst.GhostPad.new_no_target("src", Gst.PadDirection.SRC))
     if not bin_pad:
         sys.stderr.write(" Failed to add ghost pad in source bin \n")
         return None
-    return nbin
+    return new_bin
 
-def main(args, requested_pgie=None, config=None, disable_probe=False):
+
+def main(stream_paths, requested_pgie=None, config=None, disable_probe=False):
     global perf_data
-    perf_data = PERF_DATA(len(args))
+    # 定时 打印 FPS 信息 内部为每一路流创建一个 GETFPS 实例
+    perf_data = PERF_DATA(len(stream_paths))
 
-    number_sources=len(args)
+    number_sources = len(stream_paths)
 
     platform_info = PlatformInfo()
     # Standard GStreamer initialization
@@ -223,94 +273,108 @@ def main(args, requested_pgie=None, config=None, disable_probe=False):
 
     # Create gstreamer elements */
     # Create Pipeline element that will form a connection of other elements
-    print("Creating Pipeline \n ")
+    print("===> Creating Pipeline \n ")
     pipeline = Gst.Pipeline()
-    is_live = False
-
     if not pipeline:
         sys.stderr.write(" Unable to create Pipeline \n")
-    print("Creating streamux \n ")
+        return 1
+
+    is_live = False
 
     # Create nvstreammux instance to form batches from one or more sources.
+    print("===> Creating streamux \n ")
     streammux = Gst.ElementFactory.make("nvstreammux", "Stream-muxer")
     if not streammux:
         sys.stderr.write(" Unable to create NvStreamMux \n")
+        return 2
 
     pipeline.add(streammux)
     for i in range(number_sources):
-        print("Creating source_bin ",i," \n ")
-        uri_name=args[i]
-        if uri_name.find("rtsp://") == 0 :
+        print("===> Creating source_bin ", i)
+        uri_name = stream_paths[i]
+        if uri_name.find("rtsp://") == 0:  # find() -> index; fail ret -1
             is_live = True
-        source_bin=create_source_bin(i, uri_name)
+        # TODO why so many source_bin
+        source_bin = create_source_bin(i, uri_name)
         if not source_bin:
             sys.stderr.write("Unable to create source bin \n")
+            return 2.2
         pipeline.add(source_bin)
-        padname="sink_%u" %i
-        sinkpad= streammux.request_pad_simple(padname) 
+        padname = f"sink_{i}"
+        sinkpad = streammux.request_pad_simple(padname)
         if not sinkpad:
             sys.stderr.write("Unable to create sink pad bin \n")
-        srcpad=source_bin.get_static_pad("src")
+        srcpad = source_bin.get_static_pad("src")
         if not srcpad:
             sys.stderr.write("Unable to create src pad bin \n")
         srcpad.link(sinkpad)
-    queue1=Gst.ElementFactory.make("queue","queue1")
-    queue2=Gst.ElementFactory.make("queue","queue2")
-    queue3=Gst.ElementFactory.make("queue","queue3")
-    queue4=Gst.ElementFactory.make("queue","queue4")
-    queue5=Gst.ElementFactory.make("queue","queue5")
+
+    queue1 = Gst.ElementFactory.make("queue", "queue1")
+    queue2 = Gst.ElementFactory.make("queue", "queue2")
+    queue3 = Gst.ElementFactory.make("queue", "queue3")
+    queue4 = Gst.ElementFactory.make("queue", "queue4")
+    queue5 = Gst.ElementFactory.make("queue", "queue5")
     pipeline.add(queue1)
     pipeline.add(queue2)
     pipeline.add(queue3)
     pipeline.add(queue4)
     pipeline.add(queue5)
 
-    nvdslogger = None
-
-    print("Creating Pgie \n ")
-    if requested_pgie != None and (requested_pgie == 'nvinferserver' or requested_pgie == 'nvinferserver-grpc') :
+    print("===> Creating Pgie \n ")
+    if requested_pgie != None and (
+        requested_pgie == "nvinferserver" or requested_pgie == "nvinferserver-grpc"
+    ):
         pgie = Gst.ElementFactory.make("nvinferserver", "primary-inference")
-    elif requested_pgie != None and requested_pgie == 'nvinfer':
+        print("\t ++ Creating [nvinferserver] Pgie \n ")
+    elif requested_pgie != None and requested_pgie == "nvinfer":
         pgie = Gst.ElementFactory.make("nvinfer", "primary-inference")
+        print("\t ++ Creating [nvinfer] Pgie \n ")
     else:
         pgie = Gst.ElementFactory.make("nvinfer", "primary-inference")
-
+        print("\t ++ Creating [nvinfer] Pgie, default \n ")
     if not pgie:
         sys.stderr.write(" Unable to create pgie :  %s\n" % requested_pgie)
+        return 3
 
+    nvdslogger = None
     if disable_probe:
         # Use nvdslogger for perf measurement instead of probe function
-        print ("Creating nvdslogger \n")
+        print("===> Creating nvdslogger \n")
         nvdslogger = Gst.ElementFactory.make("nvdslogger", "nvdslogger")
 
-    print("Creating tiler \n ")
-    tiler=Gst.ElementFactory.make("nvmultistreamtiler", "nvtiler")
+    print("===> Creating tiler \n ")
+    # nvmultistreamtiler 把多条视频流合成一张 2D 宫格图 作为单一视频流输出
+    tiler = Gst.ElementFactory.make("nvmultistreamtiler", "nvtiler")
     if not tiler:
         sys.stderr.write(" Unable to create tiler \n")
-    print("Creating nvvidconv \n ")
+        return 4
+    print("===> Creating nvvidconv \n ")
     nvvidconv = Gst.ElementFactory.make("nvvideoconvert", "convertor")
     if not nvvidconv:
         sys.stderr.write(" Unable to create nvvidconv \n")
+        return 5
     print("Creating nvosd \n ")
     nvosd = Gst.ElementFactory.make("nvdsosd", "onscreendisplay")
     if not nvosd:
         sys.stderr.write(" Unable to create nvosd \n")
-    nvosd.set_property('process-mode',OSD_PROCESS_MODE)
-    nvosd.set_property('display-text',OSD_DISPLAY_TEXT)
+        return 6
+    nvosd.set_property("process-mode", OSD_PROCESS_MODE)
+    nvosd.set_property("display-text", OSD_DISPLAY_TEXT)
 
     if file_loop:
         if platform_info.is_integrated_gpu():
             # Set nvbuf-memory-type=4 for integrated gpu for file-loop (nvurisrcbin case)
-            streammux.set_property('nvbuf-memory-type', 4)
+            streammux.set_property("nvbuf-memory-type", 4)
         else:
             # Set nvbuf-memory-type=2 for x86 for file-loop (nvurisrcbin case)
-            streammux.set_property('nvbuf-memory-type', 2)
+            streammux.set_property("nvbuf-memory-type", 2)
 
     if no_display:
-        print("Creating Fakesink \n")
+        print("===> Creating Fakesink \n")
+        # fakesink -> Black hole for data
         sink = Gst.ElementFactory.make("fakesink", "fakesink")
-        sink.set_property('enable-last-sample', 0)
-        sink.set_property('sync', 0)
+        sink.set_property("enable-last-sample", 0)
+        sink.set_property("sync", 0)
     else:
         if platform_info.is_integrated_gpu():
             print("Creating nv3dsink \n")
@@ -322,47 +386,70 @@ def main(args, requested_pgie=None, config=None, disable_probe=False):
                 print("Creating nv3dsink \n")
                 sink = Gst.ElementFactory.make("nv3dsink", "nv3d-sink")
             else:
-                print("Creating EGLSink \n")
+                print("===> Creating EGLSink \n")
                 sink = Gst.ElementFactory.make("nveglglessink", "nvvideo-renderer")
             if not sink:
                 sys.stderr.write(" Unable to create egl sink \n")
+                return 7
 
     if not sink:
         sys.stderr.write(" Unable to create sink element \n")
+        return 8
 
     if is_live:
-        print("At least one of the sources is live")
-        streammux.set_property('live-source', 1)
+        print("===> At least one of the sources is live")
+        streammux.set_property("live-source", 1)
 
-    streammux.set_property('width', 1920)
-    streammux.set_property('height', 1080)
-    streammux.set_property('batch-size', number_sources)
-    streammux.set_property('batched-push-timeout', MUXER_BATCH_TIMEOUT_USEC)
+    streammux.set_property("width", 1920)
+    streammux.set_property("height", 1080)
+    streammux.set_property("batch-size", number_sources)
+    streammux.set_property("batched-push-timeout", MUXER_BATCH_TIMEOUT_USEC)
     if requested_pgie == "nvinferserver" and config != None:
-        pgie.set_property('config-file-path', config)
+        pgie.set_property("config-file-path", config)
     elif requested_pgie == "nvinferserver-grpc" and config != None:
-        pgie.set_property('config-file-path', config)
+        pgie.set_property("config-file-path", config)
     elif requested_pgie == "nvinfer" and config != None:
-        pgie.set_property('config-file-path', config)
+        pgie.set_property("config-file-path", config)
     else:
-        pgie.set_property('config-file-path', "dstest3_pgie_config.txt")
-    pgie_batch_size=pgie.get_property("batch-size")
-    if(pgie_batch_size != number_sources):
-        print("WARNING: Overriding infer-config batch-size",pgie_batch_size," with number of sources ", number_sources," \n")
-        pgie.set_property("batch-size",number_sources)
-    tiler_rows=int(math.sqrt(number_sources))
-    tiler_columns=int(math.ceil((1.0*number_sources)/tiler_rows))
-    tiler.set_property("rows",tiler_rows)
-    tiler.set_property("columns",tiler_columns)
+        pgie.set_property("config-file-path", "dstest3_pgie_config.txt")
+
+    # TODO 配置会马上更新吗 这就比较 ?
+    pgie_batch_size = pgie.get_property("batch-size")
+    if pgie_batch_size != number_sources:
+        print(
+            "WARNING: Overriding nvinfer-config batch-size",
+            pgie_batch_size,
+            " with number of sources ",
+            number_sources,
+            " \n",
+        )
+        pgie.set_property("batch-size", number_sources)
+
+    """
+    rows -> 宫格行数
+    colums -> 宫格列数
+    wight -> 输出总宽度 (像素)
+    height -> 输出总高度 (像素)
+    show-source -> 若为 -1 则显示全部，否则只显示指定 source
+    compute-hw -> 缩放用 GPU 还是 VIC 等硬件
+    layout: 
+        stream0 | stream1
+        --------|--------
+        stream2 | stream3
+    """
+    tiler_rows = int(math.sqrt(number_sources))
+    tiler_columns = int(math.ceil((1.0 * number_sources) / tiler_rows))
+    tiler.set_property("rows", tiler_rows)
+    tiler.set_property("columns", tiler_columns)
     tiler.set_property("width", TILED_OUTPUT_WIDTH)
     tiler.set_property("height", TILED_OUTPUT_HEIGHT)
     if platform_info.is_integrated_gpu():
         tiler.set_property("compute-hw", 2)
     else:
         tiler.set_property("compute-hw", 1)
-    sink.set_property("qos",0)
+    sink.set_property("qos", 0)
 
-    print("Adding elements to Pipeline \n")
+    print("===> Adding elements to Pipeline \n")
     pipeline.add(pgie)
     if nvdslogger:
         pipeline.add(nvdslogger)
@@ -371,7 +458,8 @@ def main(args, requested_pgie=None, config=None, disable_probe=False):
     pipeline.add(nvosd)
     pipeline.add(sink)
 
-    print("Linking elements in the Pipeline \n")
+    print("===> Linking elements in the Pipeline \n")
+    # 队列 缓冲
     streammux.link(queue1)
     queue1.link(pgie)
     pgie.link(queue2)
@@ -385,50 +473,58 @@ def main(args, requested_pgie=None, config=None, disable_probe=False):
     nvvidconv.link(queue4)
     queue4.link(nvosd)
     nvosd.link(queue5)
-    queue5.link(sink)   
+    queue5.link(sink)
 
     # create an event loop and feed gstreamer bus mesages to it
     loop = GLib.MainLoop()
     bus = pipeline.get_bus()
     bus.add_signal_watch()
-    bus.connect ("message", bus_call, loop)
-    pgie_src_pad=pgie.get_static_pad("src")
+    bus.connect("message", bus_call, loop)
+    pgie_src_pad = pgie.get_static_pad("src")
     if not pgie_src_pad:
         sys.stderr.write(" Unable to get src pad \n")
     else:
         if not disable_probe:
-            pgie_src_pad.add_probe(Gst.PadProbeType.BUFFER, pgie_src_pad_buffer_probe, 0)
+            pgie_src_pad.add_probe(
+                Gst.PadProbeType.BUFFER, pgie_src_pad_buffer_probe, 0
+            )
             # perf callback function to print fps every 5 sec
             GLib.timeout_add(5000, perf_data.perf_print_callback)
 
     # Enable latency measurement via probe if environment variable NVDS_ENABLE_LATENCY_MEASUREMENT=1 is set.
     # To enable component level latency measurement, please set environment variable
     # NVDS_ENABLE_COMPONENT_LATENCY_MEASUREMENT=1 in addition to the above.
-    if environ.get('NVDS_ENABLE_LATENCY_MEASUREMENT') == '1':
-        print ("Pipeline Latency Measurement enabled!\nPlease set env var NVDS_ENABLE_COMPONENT_LATENCY_MEASUREMENT=1 for Component Latency Measurement")
+    # 如果设置了环境变量 NVDS_ENABLE_LATENCY_MEASUREMENT=1 则可通过探测器进行延迟测量
+    # 若要启用组件级别的延迟测量 请在上述设置的基础上再设置环境变量 NVDS_ENABLE_COMPONENT_LATENCY_MEASUREMENT=1
+    if environ.get("NVDS_ENABLE_LATENCY_MEASUREMENT") == "1":
+        print(
+            "Pipeline Latency Measurement enabled!\nPlease set env var NVDS_ENABLE_COMPONENT_LATENCY_MEASUREMENT=1 for Component Latency Measurement"
+        )
         global measure_latency
         measure_latency = True
 
     # List the sources
-    print("Now playing...")
-    for i, source in enumerate(args):
+    print("===> Now playing...")
+    for i, source in enumerate(stream_paths):
         print(i, ": ", source)
 
-    print("Starting pipeline \n")
-    # start play back and listed to events		
+    print("===> Starting pipeline \n")
+    # start play back and listed to events
     pipeline.set_state(Gst.State.PLAYING)
     try:
         loop.run()
     except:
         pass
     # cleanup
-    print("Exiting app\n")
+    print("===> Exiting app\n")
     pipeline.set_state(Gst.State.NULL)
 
-def parse_args():
 
-    parser = argparse.ArgumentParser(prog="deepstream_test_3",
-                    description="deepstream-test3 multi stream, multi model inference reference app")
+def parse_args():
+    parser = argparse.ArgumentParser(
+        prog="deepstream_test_3",
+        description="deepstream-test3 multi stream, multi model inference reference app",
+    )
     parser.add_argument(
         "-i",
         "--input",
@@ -456,21 +552,21 @@ def parse_args():
         "--no-display",
         action="store_true",
         default=False,
-        dest='no_display',
+        dest="no_display",
         help="Disable display of video output",
     )
     parser.add_argument(
         "--file-loop",
         action="store_true",
         default=False,
-        dest='file_loop',
+        dest="file_loop",
         help="Loop the input file sources after EOS",
     )
     parser.add_argument(
         "--disable-probe",
         action="store_true",
         default=False,
-        dest='disable_probe',
+        dest="disable_probe",
         help="Disable the probe function and use nvdslogger for FPS",
     )
     parser.add_argument(
@@ -478,7 +574,7 @@ def parse_args():
         "--silent",
         action="store_true",
         default=False,
-        dest='silent',
+        dest="silent",
         help="Disable verbose output",
     )
     # Check input arguments
@@ -499,19 +595,46 @@ def parse_args():
     file_loop = args.file_loop
 
     if config and not pgie or pgie and not config:
-        sys.stderr.write ("\nEither pgie or configfile is missing. Please specify both! Exiting...\n\n\n\n")
+        sys.stderr.write(
+            "\nEither pgie or configfile is missing. Please specify both! Exiting...\n\n\n\n"
+        )
         parser.print_help()
         sys.exit(1)
     if config:
         config_path = Path(config)
         if not config_path.is_file():
-            sys.stderr.write ("Specified config-file: %s doesn't exist. Exiting...\n\n" % config)
+            sys.stderr.write(
+                f"Specified config-file: {config} doesn't exist. Exiting...\n\n"
+            )
             sys.exit(1)
 
     print(vars(args))
+    """
+    {
+        'input': [
+            '/home/good/wkspace/deepstream-sdk/ds8samples/streams/sample_1080p_h264.mp4'
+            '/home/good/wkspace/deepstream-sdk/ds8samples/streams/sample_1080p_h264_2.mp4', 
+        ], 
+        'configfile': 'dstest3_pgie_config.txt', 
+        'pgie': 'nvinfer', 
+        'no_display': False, 
+        'file_loop': True, 
+        'disable_probe': False, 
+        'silent': False
+    }
+    """
     return stream_paths, pgie, config, disable_probe
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     stream_paths, pgie, config, disable_probe = parse_args()
     sys.exit(main(stream_paths, pgie, config, disable_probe))
 
+"""
+python deepstream_test_3.py  \
+    -i file:///home/good/wkspace/deepstream-sdk/ds8samples/streams/sample_1080p_h264.mp4 file:///home/good/wkspace/deepstream-sdk/ds8samples/streams/sample_1080p_h264_2.mp4  \
+    -g nvinfer  \
+    -c  dstest3_pgie_config.txt  --file-loop
+
+--disable-probe=False
+"""
