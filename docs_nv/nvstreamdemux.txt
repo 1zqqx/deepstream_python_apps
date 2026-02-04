@@ -1,0 +1,65 @@
+Factory Details:
+  Rank                     primary (256)
+  Long-name                Stream demultiplexer
+  Klass                    Generic
+  Description              1-to-N pipes stream demultiplexing
+  Author                   NVIDIA Corporation. Post on Deepstream for Tesla forum for any queries @ https://devtalk.nvidia.com/default/board/209/
+
+Plugin Details:
+  Name                     nvdsgst_multistream
+  Description              NVIDIA Multistream mux/demux plugin
+  Filename                 /usr/lib/x86_64-linux-gnu/gstreamer-1.0/deepstream/libnvdsgst_multistream.so
+  Version                  8.0.0
+  License                  Proprietary
+  Source module            nvmultistream
+  Binary package           NVIDIA Multistream Plugins
+  Origin URL               http://nvidia.com/
+
+GObject
+ +----GInitiallyUnowned
+       +----GstObject
+             +----GstElement
+                   +----GstNvStreamDemux
+
+Pad Templates:
+  SINK template: 'sink'
+    Availability: Always
+    Capabilities:
+      video/x-raw(memory:NVMM)
+                 format: { (string)NV12, (string)RGBA, (string)I420 }
+                  width: [ 1, 2147483647 ]
+                 height: [ 1, 2147483647 ]
+              framerate: [ 0/1, 2147483647/1 ]
+  
+  SRC template: 'src_%u'
+    Availability: On request
+    Capabilities:
+      video/x-raw(memory:NVMM)
+                 format: { (string)NV12, (string)RGBA, (string)I420 }
+                  width: [ 1, 2147483647 ]
+                 height: [ 1, 2147483647 ]
+              framerate: [ 0/1, 2147483647/1 ]
+
+Element has no clocking capabilities.
+Element has no URI handling capabilities.
+
+Pads:
+  SINK: 'sink'
+    Pad Template: 'sink'
+
+Element Properties:
+
+  name                : The name of the object
+                        flags: 可读, 可写
+                        String. Default: "nvstreamdemux0"
+  
+  parent              : The parent of the object
+                        flags: 可读, 可写
+                        Object of type "GstObject"
+  
+  per-stream-eos      : Send EOS for individual streams as soon as EOS is received for corresponding source.
+			By default EOS is sent when EOS from all streams is received 
+			Connect all the SRC pads of demux to separate sink components when this is set to TRUE
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  

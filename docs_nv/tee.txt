@@ -1,0 +1,84 @@
+Factory Details:
+  Rank                     none (0)
+  Long-name                Tee pipe fitting
+  Klass                    Generic
+  Description              1-to-N pipe fitting
+  Author                   Erik Walthinsen <omega@cse.ogi.edu>, Wim Taymans <wim@fluendo.com>
+  Documentation            https://gstreamer.freedesktop.org/documentation/coreelements/tee.html
+
+Plugin Details:
+  Name                     coreelements
+  Description              GStreamer core elements
+  Filename                 /usr/lib/x86_64-linux-gnu/gstreamer-1.0/libgstcoreelements.so
+  Version                  1.24.2
+  License                  LGPL
+  Source module            gstreamer
+  Documentation            https://gstreamer.freedesktop.org/documentation/coreelements/
+  Source release date      2024-04-09
+  Binary package           GStreamer (Ubuntu)
+  Origin URL               https://launchpad.net/ubuntu/+source/gstreamer1.0
+
+GObject
+ +----GInitiallyUnowned
+       +----GstObject
+             +----GstElement
+                   +----GstTee
+
+Pad Templates:
+  SINK template: 'sink'
+    Availability: Always
+    Capabilities:
+      ANY
+  
+  SRC template: 'src_%u'
+    Availability: On request
+    Capabilities:
+      ANY
+
+Element has no clocking capabilities.
+Element has no URI handling capabilities.
+
+Pads:
+  SINK: 'sink'
+    Pad Template: 'sink'
+
+Element Properties:
+
+  alloc-pad           : The pad ALLOCATION queries will be proxied to (DEPRECATED, has no effect)
+                        flags: 可读, 可写, 已废弃
+                        Object of type "GstPad"
+  
+  allow-not-linked    : Return GST_FLOW_OK even if there are no source pads or they are all unlinked
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  has-chain           : If the element can operate in push mode
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
+  last-message        : The message describing current status
+                        flags: 可读
+                        String. Default: null
+  
+  name                : The name of the object
+                        flags: 可读, 可写
+                        String. Default: "tee0"
+  
+  num-src-pads        : The number of source pads
+                        flags: 可读
+                        Integer. Range: 0 - 2147483647 Default: 0 
+  
+  parent              : The parent of the object
+                        flags: 可读, 可写
+                        Object of type "GstObject"
+  
+  pull-mode           : Behavior of tee in pull mode
+                        flags: 可读, 可写
+                        Enum "GstTeePullMode" Default: 0, "never"
+                           (0): never            - Never activate in pull mode
+                           (1): single           - Only one src pad can be active in pull mode
+  
+  silent              : Don't produce last_message events
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
