@@ -1,0 +1,12 @@
+version: "3.9"
+
+services:
+  redis:
+    image: redis:7.2.11-alpine
+    container_name: redis_ds_t4
+    restart: unless-stopped
+    ports:
+      - "6399:6379"
+    volumes:
+      - /data/d_redis/ds_t4:/data
+    command: ["redis-server", "--appendonly", "yes"]

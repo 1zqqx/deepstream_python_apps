@@ -19,11 +19,11 @@
 
 import sys
 
-sys.path.append('../')
+sys.path.append("../")
 import gi
 
-gi.require_version('Gst', '1.0')
-from gi.repository import GLib, Gst
+gi.require_version("Gst", "1.0")
+from gi.repository import GLib, Gst  # type: ignore
 import sys
 from optparse import OptionParser
 from common.platform_info import PlatformInfo
@@ -53,6 +53,8 @@ MSCONV_CONFIG_FILE = "dstest4_msgconv_config.txt"
 
 pgie_classes_str = ["Vehicle", "TwoWheeler", "Person", "Roadsign"]
 
+
+# custom object
 def generate_vehicle_meta(data):
     obj = pyds.NvDsVehicleObject.cast(data)
     obj.type = "sedan"
@@ -74,6 +76,7 @@ def generate_person_meta(data):
     return obj
 
 
+# how to attach custom objects
 def generate_event_msg_meta(data, class_id):
     meta = pyds.NvDsEventMsgMeta.cast(data)
     meta.sensorId = 0
@@ -113,14 +116,16 @@ def generate_event_msg_meta(data, class_id):
 #    (info.get_buffer()) from traversing the pipeline until user return.
 # b) loops inside probe() callback could be costly in python.
 #    So users shall optimize according to their use-case.
+# a) probe() 回调操作是同步的,因此会锁定缓冲区(即(info.get_buffer())),直到用户返回才会继续处理管道中的数据
+# b) probe() 回调内部的循环在 Python 中可能会比较耗时. 因此, 用户应根据其使用场景进行优化.
 def osd_sink_pad_buffer_probe(pad, info, u_data):
     frame_number = 0
-    # Intiallizing object counter with 0.
+    # Initializing object counter with 0.
     obj_counter = {
         PGIE_CLASS_ID_VEHICLE: 0,
         PGIE_CLASS_ID_PERSON: 0,
         PGIE_CLASS_ID_BICYCLE: 0,
-        PGIE_CLASS_ID_ROADSIGN: 0
+        PGIE_CLASS_ID_ROADSIGN: 0,
     }
     gst_buffer = info.get_buffer()
     if not gst_buffer:
@@ -156,6 +161,7 @@ def osd_sink_pad_buffer_probe(pad, info, u_data):
 
         frame_number = frame_meta.frame_num
         l_obj = frame_meta.obj_meta_list
+        # TODO slow -> optimize
         while l_obj is not None:
             try:
                 obj_meta = pyds.NvDsObjectMeta.cast(l_obj.data)
@@ -182,15 +188,14 @@ def osd_sink_pad_buffer_probe(pad, info, u_data):
             # set(red, green, blue, alpha); set to Black
             txt_params.text_bg_clr.set(0.0, 0.0, 0.0, 1.0)
 
-            # Ideally NVDS_EVENT_MSG_META should be attached to buffer by the
+            # NOTE Ideally ??? NVDS_EVENT_MSG_META should be attached to buffer by the
             # component implementing detection / recognition logic.
             # Here it demonstrates how to use / attach that meta data.
             if is_first_object and (frame_number % 30) == 0:
                 # Frequency of messages to be send will be based on use case.
                 # Here message is being sent for first object every 30 frames.
 
-                user_event_meta = pyds.nvds_acquire_user_meta_from_pool(
-                    batch_meta)
+                user_event_meta = pyds.nvds_acquire_user_meta_from_pool(batch_meta)
                 if user_event_meta:
                     # Allocating an NvDsEventMsgMeta instance and getting
                     # reference to it. The underlying memory is not manged by
@@ -207,13 +212,15 @@ def osd_sink_pad_buffer_probe(pad, info, u_data):
                     msg_meta = generate_event_msg_meta(msg_meta, obj_meta.class_id)
 
                     user_event_meta.user_meta_data = msg_meta
-                    user_event_meta.base_meta.meta_type = pyds.NvDsMetaType.NVDS_EVENT_MSG_META
-                    pyds.nvds_add_user_meta_to_frame(frame_meta,
-                                                     user_event_meta)
+                    user_event_meta.base_meta.meta_type = (
+                        pyds.NvDsMetaType.NVDS_EVENT_MSG_META
+                    )
+                    pyds.nvds_add_user_meta_to_frame(frame_meta, user_event_meta)
                 else:
                     print("Error in attaching event meta to buffer\n")
 
                 is_first_object = False
+
             try:
                 l_obj = l_obj.next
             except StopIteration:
@@ -223,9 +230,14 @@ def osd_sink_pad_buffer_probe(pad, info, u_data):
         except StopIteration:
             break
 
-    print("Frame Number =", frame_number, "Vehicle Count =",
-          obj_counter[PGIE_CLASS_ID_VEHICLE], "Person Count =",
-          obj_counter[PGIE_CLASS_ID_PERSON])
+    print(
+        "Frame Number =",
+        frame_number,
+        "Vehicle Count =",
+        obj_counter[PGIE_CLASS_ID_VEHICLE],
+        "Person Count =",
+        obj_counter[PGIE_CLASS_ID_PERSON],
+    )
     return Gst.PadProbeReturn.OK
 
 
@@ -242,24 +254,24 @@ def main(args):
     # pyds.register_user_copyfunc(meta_copy_func)
     # pyds.register_user_releasefunc(meta_free_func)
 
-    print("Creating Pipeline \n ")
-
+    print("===> Creating Pipeline \n ")
     pipeline = Gst.Pipeline()
-
     if not pipeline:
         sys.stderr.write(" Unable to create Pipeline \n")
 
-    print("Creating Source \n ")
+    print("===> Creating Source \n ")
     source = Gst.ElementFactory.make("filesrc", "file-source")
     if not source:
         sys.stderr.write(" Unable to create Source \n")
 
-    print("Creating H264Parser \n")
+    # qtdemux
+
+    print("===> Creating H264Parser \n")
     h264parser = Gst.ElementFactory.make("h264parse", "h264-parser")
     if not h264parser:
         sys.stderr.write(" Unable to create h264 parser \n")
 
-    print("Creating Decoder \n")
+    print("===> Creating Decoder \n")
     decoder = Gst.ElementFactory.make("nvv4l2decoder", "nvv4l2-decoder")
     if not decoder:
         sys.stderr.write(" Unable to create Nvv4l2 Decoder \n")
@@ -280,14 +292,17 @@ def main(args):
     if not nvosd:
         sys.stderr.write(" Unable to create nvosd \n")
 
+    # Transforms buffer meta to schema / payload meta
     msgconv = Gst.ElementFactory.make("nvmsgconv", "nvmsg-converter")
     if not msgconv:
         sys.stderr.write(" Unable to create msgconv \n")
 
+    # Sends payload metadata to remote server
     msgbroker = Gst.ElementFactory.make("nvmsgbroker", "nvmsg-broker")
     if not msgbroker:
         sys.stderr.write(" Unable to create msgbroker \n")
 
+    # 分流
     tee = Gst.ElementFactory.make("tee", "nvsink-tee")
     if not tee:
         sys.stderr.write(" Unable to create tee \n")
@@ -301,7 +316,7 @@ def main(args):
         sys.stderr.write(" Unable to create queue2 \n")
 
     if no_display:
-        print("Creating FakeSink \n")
+        print("===> Creating FakeSink \n")
         sink = Gst.ElementFactory.make("fakesink", "fakesink")
         if not sink:
             sys.stderr.write(" Unable to create fakesink \n")
@@ -316,29 +331,31 @@ def main(args):
                 print("Creating nv3dsink \n")
                 sink = Gst.ElementFactory.make("nv3dsink", "nv3d-sink")
             else:
-                print("Creating EGLSink \n")
+                print("===> Creating EGLSink \n")
                 sink = Gst.ElementFactory.make("nveglglessink", "nvvideo-renderer")
             if not sink:
                 sys.stderr.write(" Unable to create egl sink \n")
 
-    print("Playing file %s " % input_file)
-    source.set_property('location', input_file)
-    streammux.set_property('width', 1920)
-    streammux.set_property('height', 1080)
-    streammux.set_property('batch-size', 1)
-    streammux.set_property('batched-push-timeout', MUXER_BATCH_TIMEOUT_USEC)
-    pgie.set_property('config-file-path', PGIE_CONFIG_FILE)
-    msgconv.set_property('config', MSCONV_CONFIG_FILE)
-    msgconv.set_property('payload-type', schema_type)
-    msgbroker.set_property('proto-lib', proto_lib)
-    msgbroker.set_property('conn-str', conn_str)
-    if cfg_file is not None:
-        msgbroker.set_property('config', cfg_file)
-    if topic is not None:
-        msgbroker.set_property('topic', topic)
-    msgbroker.set_property('sync', False)
+    print(f"===> Playing file {input_file} ")
+    source.set_property("location", input_file)
+    streammux.set_property("width", 1920)
+    streammux.set_property("height", 1080)
+    streammux.set_property("batch-size", 1)
+    streammux.set_property("batched-push-timeout", MUXER_BATCH_TIMEOUT_USEC)
 
-    print("Adding elements to Pipeline \n")
+    pgie.set_property("config-file-path", PGIE_CONFIG_FILE)
+
+    msgconv.set_property("config", MSCONV_CONFIG_FILE)
+    msgconv.set_property("payload-type", schema_type)
+    msgbroker.set_property("proto-lib", proto_lib)
+    msgbroker.set_property("conn-str", conn_str)
+    if cfg_file is not None:
+        msgbroker.set_property("config", cfg_file)
+    if topic is not None:
+        msgbroker.set_property("topic", topic)
+    msgbroker.set_property("sync", False)  # 同步 False
+
+    print("===> Adding elements to Pipeline \n")
     pipeline.add(source)
     pipeline.add(h264parser)
     pipeline.add(decoder)
@@ -353,7 +370,7 @@ def main(args):
     pipeline.add(msgbroker)
     pipeline.add(sink)
 
-    print("Linking elements in the Pipeline \n")
+    print("===> Linking elements in the Pipeline \n")
     source.link(h264parser)
     h264parser.link(decoder)
 
@@ -369,11 +386,16 @@ def main(args):
     pgie.link(nvvidconv)
     nvvidconv.link(nvosd)
     nvosd.link(tee)
+
+    # streammux -> pgie -> nvvidconv -> nvosd -> tee +-->src01(tee_msg_pad)      -> queue1
+    #                                                +-->src02(tee_render_pad)   -> queue2
+    # queue1 -> msgconv -> msgbroker
     queue1.link(msgconv)
     msgconv.link(msgbroker)
+    # queue2 -> video_sink
     queue2.link(sink)
     sink_pad = queue1.get_static_pad("sink")
-    tee_msg_pad = tee.request_pad_simple('src_%u')
+    tee_msg_pad = tee.request_pad_simple("src_%u")
     tee_render_pad = tee.request_pad_simple("src_%u")
     if not tee_msg_pad or not tee_render_pad:
         sys.stderr.write("Unable to get request pads\n")
@@ -393,7 +415,7 @@ def main(args):
 
     osdsinkpad.add_probe(Gst.PadProbeType.BUFFER, osd_sink_pad_buffer_probe, 0)
 
-    print("Starting pipeline \n")
+    print("===> Starting pipeline \n")
 
     # start play back and listed to events
     pipeline.set_state(Gst.State.PLAYING)
@@ -402,36 +424,71 @@ def main(args):
     except:
         pass
     # cleanup
-    
-    #pyds.unset_callback_funcs()
+
+    # pyds.unset_callback_funcs()
     pipeline.set_state(Gst.State.NULL)
 
 
 # Parse and validate input arguments
 def parse_args():
     parser = OptionParser()
-    parser.add_option("-c", "--cfg-file", dest="cfg_file",
-                      help="Set the adaptor config file. Optional if "
-                           "connection string has relevant  details.",
-                      metavar="FILE")
-    parser.add_option("-i", "--input-file", dest="input_file",
-                      help="Set the input H264 file", metavar="FILE")
-    parser.add_option("-p", "--proto-lib", dest="proto_lib",
-                      help="Absolute path of adaptor library", metavar="PATH")
-    parser.add_option("", "--conn-str", dest="conn_str",
-                      help="Connection string of backend server. Optional if "
-                           "it is part of config file.", metavar="STR")
-    parser.add_option("-s", "--schema-type", dest="schema_type", default="0",
-                      help="Type of message schema (0=Full, 1=minimal), "
-                           "default=0", metavar="<0|1>")
-    parser.add_option("-t", "--topic", dest="topic",
-                      help="Name of message topic. Optional if it is part of "
-                           "connection string or config file.", metavar="TOPIC")
-    parser.add_option("", "--no-display", action="store_true",
-                      dest="no_display", default=False,
-                      help="Disable display")
+    parser.add_option(
+        "-c",
+        "--cfg-file",
+        dest="cfg_file",
+        help="Set the adaptor config file. Optional if "
+        "connection string has relevant  details.",
+        metavar="FILE",
+    )
+    parser.add_option(
+        "-i",
+        "--input-file",
+        dest="input_file",
+        help="Set the input H264 file",
+        metavar="FILE",
+    )
+    parser.add_option(
+        "-p",
+        "--proto-lib",
+        dest="proto_lib",
+        help="Absolute path of adaptor library",
+        metavar="PATH",
+    )
+    parser.add_option(
+        "",
+        "--conn-str",
+        dest="conn_str",
+        help="Connection string of backend server. Optional if "
+        "it is part of config file.",
+        metavar="STR",
+    )
+    parser.add_option(
+        "-s",
+        "--schema-type",
+        dest="schema_type",
+        default="0",
+        help="Type of message schema (0=Full, 1=minimal), " "default=0",
+        metavar="<0|1>",
+    )
+    parser.add_option(
+        "-t",
+        "--topic",
+        dest="topic",
+        help="Name of message topic. Optional if it is part of "
+        "connection string or config file.",
+        metavar="TOPIC",
+    )
+    parser.add_option(
+        "",
+        "--no-display",
+        action="store_true",
+        dest="no_display",
+        default=False,
+        help="Disable display",
+    )
 
-    (options, args) = parser.parse_args()
+    options, args = parser.parse_args()
+    print(f"[=] options: {options}" f"args: {args}")
 
     global cfg_file
     global input_file
@@ -448,16 +505,45 @@ def parse_args():
     no_display = options.no_display
 
     if not (proto_lib and input_file):
-        print("Usage: python3 deepstream_test_4.py -i <H264 filename> -p "
-              "<Proto adaptor library> --conn-str=<Connection string>")
+        print(
+            "Usage: python3 deepstream_test_4.py -i <H264 filename> -p "
+            "<Proto adaptor library> --conn-str=<Connection string>"
+        )
         return 1
 
     schema_type = 0 if options.schema_type == "0" else 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     ret = parse_args()
     # If argument parsing fails, returns failure (non-zero)
     if ret == 1:
         sys.exit(1)
     sys.exit(main(sys.argv))
+
+"""
+python deepstream_test_4.py \
+    -c /home/good/wkspace/deepstream-sdk/deepstream_python_apps/apps/deepstream-test4/cfg_redis.txt \
+    -i /home/good/wkspace/deepstream-sdk/ds8samples/streams/sample_1080p_h264.mp4 \
+    -p /opt/nvidia/deepstream/deepstream/lib/libnvds_redis_proto.so \
+    --conn-str="127.0.0.1;6379"
+
+-c cfg_redis.txt        # for redis
+-p /opt/nvidia/deepstream/deepstream/lib/libnvds_redis_proto.so
+-t topic                # Only kafka needs it
+-s 0 or 1 -> readme
+--conn-str "127.0.0.1;6379"
+--no-display to disable display.
+"""
+
+"""
+Error: gst-library-error-quark: Could not configure supporting library. (5): gstnvmsgbroker.cpp(439): legacy_gst_nvmsgbroker_start (): /GstPipeline:pipeline0/GstNvMsgBroker:nvmsg-broker:
+unable to connect to broker library
+"""
+
+# TODO: 标记代码中需要实现的功能或任务
+# FIXME: 标记代码中需要修复的问题或缺陷
+# NOTE: 提供额外的注释或提示信息, 帮助理解代码意图或设计决策
+# BUG: 标记已知的Bug或错误
+# XXX: 标记需要警惕或需要重点关注的代码块
+# HACK: 标记临时性修复或不优雅的解决方案
