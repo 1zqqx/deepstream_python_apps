@@ -24,8 +24,7 @@ import configparser
 import argparse
 
 gi.require_version("Gst", "1.0")
-from gi.repository import Gst
-from gi.repository import GLib
+from gi.repository import Gst, GLib  # type: ignore
 from ctypes import *
 import time
 import sys
@@ -62,12 +61,12 @@ pgie_classes_str = ["Vehicle", "TwoWheeler", "Person", "RoadSign"]
 def pgie_src_pad_buffer_probe(pad, info, u_data):
     """
     The function pgie_src_pad_buffer_probe() is a callback function that is called every time a buffer
-    is received on the source pad of the pgie element. 
+    is received on the source pad of the pgie element.
     The function calculate the batch metadata from the buffer and iterates through the list of frame
-    metadata in the batch. 
+    metadata in the batch.
     For each frame, it iterates through the list of object metadata and prints the frame number, number
     of objects detected, and the number of vehicles, persons, bicycles, and road signs detected in the
-    frame. 
+    frame.
     The function also retrieves the frame rate of the stream from the frame metadata
     :param pad: The pad on which the probe is attached
     :param info: The Gst.PadProbeInfo object that contains the buffer
@@ -141,11 +140,11 @@ def pgie_src_pad_buffer_probe(pad, info, u_data):
 
 def cb_newpad(decodebin, decoder_src_pad, data):
     """
-    The function is called when a new pad is created by the decodebin. 
-    The function checks if the new pad is for video and not audio. 
-    If the new pad is for video, the function checks if the pad caps contain NVMM memory features. 
+    The function is called when a new pad is created by the decodebin.
+    The function checks if the new pad is for video and not audio.
+    If the new pad is for video, the function checks if the pad caps contain NVMM memory features.
     If the pad caps contain NVMM memory features, the function links the decodebin pad to the source bin
-    ghost pad. 
+    ghost pad.
     If the pad caps do not contain NVMM memory features, the function prints an error message.
     :param decodebin: The decodebin element that is creating the new pad
     :param decoder_src_pad: The source pad created by the decodebin element
@@ -182,7 +181,7 @@ def decodebin_child_added(child_proxy, Object, name, user_data):
     """
     If the child added to the decodebin is another decodebin, connect to its child-added signal. If the
     child added is a source, set its drop-on-latency property to True.
-    
+
     :param child_proxy: The child element that was added to the decodebin
     :param Object: The object that emitted the signal
     :param name: The name of the element that was added
@@ -202,17 +201,16 @@ def create_source_bin(index, uri):
     """
     It creates a GstBin, adds a uridecodebin to it, and connects the uridecodebin's pad-added signal to
     a callback function
-    
+
     :param index: The index of the source bin
     :param uri: The URI of the video file to be played
     :return: A bin with a uri decode bin and a ghost pad.
     """
-    print("Creating source bin")
+    print("+++ Creating source bin")
 
     # Create a source GstBin to abstract this bin's content from the rest of the
     # pipeline
-    bin_name = "source-bin-%02d" % index
-    print(bin_name)
+    bin_name = f"source-bin-{index:02}"
     nbin = Gst.Bin.new(bin_name)
     if not nbin:
         sys.stderr.write(" Unable to create source bin \n")
@@ -252,52 +250,53 @@ def make_element(element_name, i):
     :param i: the index of the element in the pipeline
     :return: A Gst.Element object
     """
-    element = Gst.ElementFactory.make(element_name, element_name)
+    element = Gst.ElementFactory.make(element_name, f"{element_name}-{str(i)}")
     if not element:
-        sys.stderr.write(" Unable to create {0}".format(element_name))
-    element.set_property("name", "{0}-{1}".format(element_name, str(i)))
+        sys.stderr.write(f" Unable to create {element_name}")
     return element
 
 
 def main(args, requested_pgie=None, config=None, disable_probe=False):
     input_sources = args
     number_sources = len(input_sources)
+
     global perf_data
+    # 每一路流的帧数统计信息
     perf_data = PERF_DATA(number_sources)
 
     platform_info = PlatformInfo()
-    # Standard GStreamer initialization
     Gst.init(None)
 
-    # Create gstreamer elements */
-    # Create Pipeline element that will form a connection of other elements
-    print("Creating Pipeline \n ")
+    print("===> Creating Pipeline \n ")
     pipeline = Gst.Pipeline()
-    is_live = False
+    is_live = False  # 是否 rtsp 流
 
     if not pipeline:
         sys.stderr.write(" Unable to create Pipeline \n")
-    print("Creating streamux \n ")
 
+    print("===> Creating streammux \n ")
     # Create nvstreammux instance to form batches from one or more sources.
     streammux = Gst.ElementFactory.make("nvstreammux", "Stream-muxer")
     if not streammux:
         sys.stderr.write(" Unable to create NvStreamMux \n")
-
     pipeline.add(streammux)
+
     for i in range(number_sources):
-        print("Creating source_bin ", i, " \n ")
+        print("\t Creating source_bin ", i)
         uri_name = input_sources[i]
         if uri_name.find("rtsp://") == 0:
             is_live = True
+
         source_bin = create_source_bin(i, uri_name)
         if not source_bin:
             sys.stderr.write("Unable to create source bin \n")
         pipeline.add(source_bin)
-        padname = "sink_%u" % i
+
+        padname = f"sink_{i}"
         sinkpad = streammux.request_pad_simple(padname)
         if not sinkpad:
             sys.stderr.write("Unable to create sink pad bin \n")
+
         srcpad = source_bin.get_static_pad("src")
         if not srcpad:
             sys.stderr.write("Unable to create src pad bin \n")
@@ -305,25 +304,32 @@ def main(args, requested_pgie=None, config=None, disable_probe=False):
 
     queue1 = Gst.ElementFactory.make("queue", "queue1")
     pipeline.add(queue1)
-    print("Creating Pgie \n ")
+
+    print("===> Creating Pgie \n ")
     pgie = Gst.ElementFactory.make("nvinfer", "primary-inference")
     if not pgie:
         sys.stderr.write(" Unable to create pgie \n")
 
-    print("Creating nvstreamdemux \n ")
+    print("===> Creating nvstreamdemux \n ")
+    # 1-to-N pipes stream demultiplexing
     nvstreamdemux = Gst.ElementFactory.make("nvstreamdemux", "nvstreamdemux")
     if not nvstreamdemux:
         sys.stderr.write(" Unable to create nvstreamdemux \n")
 
     if is_live:
-        print("Atleast one of the sources is live")
+        print("+++ Atleast one of the sources is live")
         streammux.set_property("live-source", 1)
 
-    streammux.set_property("width", 960)
-    streammux.set_property("height", 540)
+    streammux.set_property("width", 1920)
+    streammux.set_property("height", 1080)
     streammux.set_property("batch-size", number_sources)
     streammux.set_property("batched-push-timeout", MUXER_BATCH_TIMEOUT_USEC)
+
     pgie.set_property("config-file-path", "ds_demux_pgie_config.txt")
+    # nvinfer 可能在 set_property("config-file-path") 时即解析配置，也可能在 pipeline 进入
+    # PAUSED（gst_nvinfer_start）时才解析。此处 get 得到的是当前属性（默认或已从配置填入），
+    # 再强制与 streammux 的源路数一致；配置中“batch-size”会被 GObject 属性覆盖（见配置文件注释）。
+    # 通过 GObject 属性（如这里的 set_property("batch-size", ...)）设置的值会覆盖配置文件里的同名项。
     pgie_batch_size = pgie.get_property("batch-size")
     if pgie_batch_size != number_sources:
         print(
@@ -335,7 +341,7 @@ def main(args, requested_pgie=None, config=None, disable_probe=False):
         )
         pgie.set_property("batch-size", number_sources)
 
-    print("Adding elements to Pipeline \n")
+    print("===> Adding elements to Pipeline \n")
     pipeline.add(pgie)
     pipeline.add(nvstreamdemux)
 
@@ -358,7 +364,7 @@ def main(args, requested_pgie=None, config=None, disable_probe=False):
                 print("Creating nv3dsink \n")
                 sink = make_element("nv3dsink", i)
             else:
-                print("Creating EGLSink \n")
+                print("===> Creating EGLSink \n")
                 sink = make_element("nveglglessink", i)
             if not sink:
                 sys.stderr.write(" Unable to create egl sink \n")
@@ -389,21 +395,24 @@ def main(args, requested_pgie=None, config=None, disable_probe=False):
             sys.stderr.write("Unable to create queue sink pad \n")
         demuxsrcpad.link(queuesinkpad)
 
-
         # connect  queue -> nvvidconv -> nvosd -> nveglgl
         queue.link(nvvideoconvert)
         nvvideoconvert.link(nvdsosd)
         nvdsosd.link(sink)
 
+        # 关闭 sink 的 QoS：不丢弃“迟到”的 buffer，尽量显示每一帧（适合文件回放；
+        # 若为 1 则开启 QoS，sink 会丢弃迟到帧并向上游发 QoS 事件以控延迟，适合直播）
         sink.set_property("qos", 0)
 
-    print("Linking elements in the Pipeline \n")
+    print("===> Linking elements in the Pipeline \n")
     # create an event loop and feed gstreamer bus mesages to it
     loop = GLib.MainLoop()
     bus = pipeline.get_bus()
     bus.add_signal_watch()
     bus.connect("message", bus_call, loop)
+
     pgie_src_pad = pgie.get_static_pad("src")
+
     if not pgie_src_pad:
         sys.stderr.write(" Unable to get src pad \n")
     else:
@@ -412,11 +421,11 @@ def main(args, requested_pgie=None, config=None, disable_probe=False):
         GLib.timeout_add(5000, perf_data.perf_print_callback)
 
     # List the sources
-    print("Now playing...")
+    print("===> Now playing...")
     for i, source in enumerate(input_sources):
         print(i, ": ", source)
 
-    print("Starting pipeline \n")
+    print("===> Starting pipeline \n")
     # start play back and listed to events
     pipeline.set_state(Gst.State.PLAYING)
 
@@ -425,14 +434,16 @@ def main(args, requested_pgie=None, config=None, disable_probe=False):
     except:
         pass
     # cleanup
-    print("Exiting app\n")
+    print("===> Exiting app\n")
     pipeline.set_state(Gst.State.NULL)
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(prog="deepstream_demux_multi_in_multi_out.py", 
-        description="deepstream-demux-multi-in-multi-out takes multiple URI streams as input" \
-            "and uses `nvstreamdemux` to split batches and output separate buffer/streams")
+    parser = argparse.ArgumentParser(
+        prog="deepstream_demux_multi_in_multi_out.py",
+        description="deepstream-demux-multi-in-multi-out takes multiple URI streams as input"
+        "and uses `nvstreamdemux` to split batches and output separate buffer/streams",
+    )
     parser.add_argument(
         "-i",
         "--input",
@@ -445,9 +456,19 @@ def parse_args():
 
     args = parser.parse_args()
     stream_paths = args.input
+    print(f"[=] stream_paths: {stream_paths}")
     return stream_paths
 
 
 if __name__ == "__main__":
     stream_paths = parse_args()
     sys.exit(main(stream_paths))
+
+"""
+python deepstream_demux_multi_in_multi_out.py -i \
+    file:///home/good/wkspace/deepstream-sdk/ds8samples/streams/sample_1080p_h264.mp4 \
+    file:///home/good/wkspace/deepstream-sdk/ds8samples/streams/sample_1080p_h264_q20.mp4
+
+    file:///home/good/wkspace/deepstream-sdk/ds8samples/streams/sample_1080p_h264_2.mp4 \
+    file:///home/good/wkspace/deepstream-sdk/ds8samples/streams/sample_1080p_h264_3.mp4 \
+"""
