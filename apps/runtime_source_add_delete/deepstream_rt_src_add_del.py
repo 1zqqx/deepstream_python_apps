@@ -18,32 +18,34 @@
 ################################################################################
 
 import sys
-sys.path.append('../')
+
+sys.path.append("../")
 import gi
 import configparser
-gi.require_version('Gst', '1.0')
-from gi.repository import Gst, GLib
-from gi.repository import GLib
+
+gi.require_version("Gst", "1.0")
+from gi.repository import Gst, GLib  # type: ignore
 from ctypes import *
 import time
 import sys
 import math
 import random
-import platform
+from pathlib import Path
+
 from common.platform_info import PlatformInfo
 
 import pyds
 
-MAX_DISPLAY_LEN=64
+MAX_DISPLAY_LEN = 64
 PGIE_CLASS_ID_VEHICLE = 0
 PGIE_CLASS_ID_BICYCLE = 1
 PGIE_CLASS_ID_PERSON = 2
 PGIE_CLASS_ID_ROADSIGN = 3
-MUXER_OUTPUT_WIDTH=1920
-MUXER_OUTPUT_HEIGHT=1080
+MUXER_OUTPUT_WIDTH = 1920
+MUXER_OUTPUT_HEIGHT = 1080
 MUXER_BATCH_TIMEOUT_USEC = 33000
-TILED_OUTPUT_WIDTH=1280
-TILED_OUTPUT_HEIGHT=720
+TILED_OUTPUT_WIDTH = 1280
+TILED_OUTPUT_HEIGHT = 720
 GPU_ID = 0
 MAX_NUM_SOURCES = 4
 SINK_ELEMENT = "nveglglessink"
@@ -66,7 +68,7 @@ g_eos_list = [False] * MAX_NUM_SOURCES
 g_source_enabled = [False] * MAX_NUM_SOURCES
 g_source_bin_list = [None] * MAX_NUM_SOURCES
 
-pgie_classes_str= ["Vehicle", "TwoWheeler", "Person","RoadSign"]
+pgie_classes_str = ["Vehicle", "TwoWheeler", "Person", "RoadSign"]
 
 uri = ""
 
@@ -82,12 +84,13 @@ nvosd = None
 tiler = None
 tracker = None
 
-def decodebin_child_added(child_proxy,Object,name,user_data):
+
+def decodebin_child_added(child_proxy, Object, name, user_data):
     print("Decodebin child added:", name, "\n")
-    if(name.find("decodebin") != -1):
-        Object.connect("child-added",decodebin_child_added,user_data)   
-    if(name.find("nvv4l2decoder") != -1):
-        if (platform_info.is_integrated_gpu()):
+    if name.find("decodebin") != -1:
+        Object.connect("child-added", decodebin_child_added, user_data)
+    if name.find("nvv4l2decoder") != -1:
+        if platform_info.is_integrated_gpu():
             Object.set_property("enable-max-performance", True)
             Object.set_property("drop-frame-interval", 0)
             Object.set_property("num-extra-surfaces", 0)
@@ -95,54 +98,57 @@ def decodebin_child_added(child_proxy,Object,name,user_data):
             Object.set_property("gpu_id", GPU_ID)
 
 
-def cb_newpad(decodebin,pad,data):
+def cb_newpad(decodebin, pad, data):
     global streammux
-    print("In cb_newpad\n")
-    caps=pad.get_current_caps()
-    gststruct=caps.get_structure(0)
-    gstname=gststruct.get_name()
+    print("===> In cb_newpad\n")
+    caps = pad.get_current_caps()
+    gststruct = caps.get_structure(0)
+    gstname = gststruct.get_name()
 
-    # Need to check if the pad created by the decodebin is for video and not
-    # audio.
-    print("gstname=",gstname)
-    if(gstname.find("video")!=-1):
+    # Need to check if the pad created by the decodebin is for video and not audio.
+    print("\t + gstname=", gstname)
+    if gstname.find("video") != -1:
         source_id = data
-        pad_name = "sink_%u" % source_id
-        print(pad_name)
-        #Get a sink pad from the streammux, link to decodebin
+        pad_name = f"sink_{source_id:02}"
+        print(f"\t + pad_name=", pad_name)
+
+        # Get a sink pad from the streammux, link to decodebin
         sinkpad = streammux.request_pad_simple(pad_name)
         if not sinkpad:
             sys.stderr.write("Unable to create sink pad bin \n")
+
         if pad.link(sinkpad) == Gst.PadLinkReturn.OK:
-            print("Decodebin linked to pipeline")
+            print("\t + Decodebin linked to pipeline")
         else:
             sys.stderr.write("Failed to link decodebin to pipeline\n")
 
 
-def create_uridecode_bin(index,filename):
+def create_uridecode_bin(index, filename):
     global g_source_id_list
-    print("Creating uridecodebin for [%s]" % filename)
+    print(f"===> Creating uridecodebin for [{filename}]")
 
     # Create a source GstBin to abstract this bin's content from the rest of the
     # pipeline
     g_source_id_list[index] = index
-    bin_name="source-bin-%02d" % index
-    print(bin_name)
+    bin_name = f"source-bin-{index:02}"
+    print(f"\t + {bin_name}\n")
 
     # Source element for reading from the uri.
     # We will use decodebin and let it figure out the container format of the
     # stream and the codec and plug the appropriate demux and decode plugins.
-    bin=Gst.ElementFactory.make("uridecodebin", bin_name)
+    bin = Gst.ElementFactory.make("uridecodebin", bin_name)
     if not bin:
         sys.stderr.write(" Unable to create uri decode bin \n")
-    # We set the input uri to the source element
-    bin.set_property("uri",filename)
-    # Connect to the "pad-added" signal of the decodebin which generates a
-    # callback once a new pad for raw data has been created by the decodebin
-    bin.connect("pad-added",cb_newpad,g_source_id_list[index])
-    bin.connect("child-added",decodebin_child_added,g_source_id_list[index])
 
-    #Set status of the source to enabled
+    # We set the input uri to the source element
+    bin.set_property("uri", filename)
+
+    # 当 uridecodebin 内部解码出视频并产生 pad 时，会触发 cb_newpad, 在回调里把该 pad 接到 streammux
+    bin.connect("pad-added", cb_newpad, g_source_id_list[index])
+    # 可选:观察内部子元素创建(如 nvv4l2decoder), 用于打日志或设置属性
+    bin.connect("child-added", decodebin_child_added, g_source_id_list[index])
+
+    # Set status of the source to enabled
     g_source_enabled[index] = True
 
     return bin
@@ -154,27 +160,27 @@ def stop_release_source(source_id):
     global streammux
     global pipeline
 
-    #Attempt to change status of source to be released 
+    # Attempt to change status of source to be released
     state_return = g_source_bin_list[source_id].set_state(Gst.State.NULL)
 
     if state_return == Gst.StateChangeReturn.SUCCESS:
         print("STATE CHANGE SUCCESS\n")
         pad_name = "sink_%u" % source_id
         print(pad_name)
-        #Retrieve sink pad to be released
+        # Retrieve sink pad to be released
         sinkpad = streammux.get_static_pad(pad_name)
-        #Send flush stop event to the sink pad, then release from the streammux
+        # Send flush stop event to the sink pad, then release from the streammux
         sinkpad.send_event(Gst.Event.new_flush_stop(False))
         streammux.release_request_pad(sinkpad)
         print("STATE CHANGE SUCCESS\n")
-        #Remove the source bin from the pipeline
+        # Remove the source bin from the pipeline
         pipeline.remove(g_source_bin_list[source_id])
         source_id -= 1
         g_num_sources -= 1
 
     elif state_return == Gst.StateChangeReturn.FAILURE:
         print("STATE CHANGE FAILURE\n")
-    
+
     elif state_return == Gst.StateChangeReturn.ASYNC:
         state_return = g_source_bin_list[source_id].get_state(Gst.CLOCK_TIME_NONE)
         pad_name = "sink_%u" % source_id
@@ -194,32 +200,32 @@ def delete_sources(data):
     global g_eos_list
     global g_source_enabled
 
-    #First delete sources that have reached end of stream
+    # First delete sources that have reached end of stream
     for source_id in range(MAX_NUM_SOURCES):
-        if (g_eos_list[source_id] and g_source_enabled[source_id]):
+        if g_eos_list[source_id] and g_source_enabled[source_id]:
             g_source_enabled[source_id] = False
             stop_release_source(source_id)
 
-    #Quit if no sources remaining
-    if (g_num_sources == 0):
+    # Quit if no sources remaining
+    if g_num_sources == 0:
         loop.quit()
-        print("All sources stopped quitting")
+        print("===> All sources stopped quitting")
         return False
 
-    #Randomly choose an enabled source to delete
+    # Randomly choose an enabled source to delete
     source_id = random.randrange(0, MAX_NUM_SOURCES)
-    while (not g_source_enabled[source_id]):
+    while not g_source_enabled[source_id]:
         source_id = random.randrange(0, MAX_NUM_SOURCES)
-    #Disable the source
+    # Disable the source
     g_source_enabled[source_id] = False
-    #Release the source
-    print("Calling Stop %d " % source_id)
+    # Release the source
+    print(f"\t + Calling Stop {source_id} ")
     stop_release_source(source_id)
 
-    #Quit if no sources remaining
-    if (g_num_sources == 0):
+    # Quit if no sources remaining
+    if g_num_sources == 0:
         loop.quit()
-        print("All sources stopped quitting")
+        print("===> All sources stopped quitting ")
         return False
 
     return True
@@ -233,52 +239,53 @@ def add_sources(data):
 
     source_id = g_num_sources
 
-    #Randomly select an un-enabled source to add
+    # Randomly select an un-enabled source to addstreammux
     source_id = random.randrange(0, MAX_NUM_SOURCES)
-    while (g_source_enabled[source_id]):
+    while g_source_enabled[source_id]:
         source_id = random.randrange(0, MAX_NUM_SOURCES)
 
-    #Enable the source
+    # Enable the source
     g_source_enabled[source_id] = True
 
-    print("Calling Start %d " % source_id)
+    print("===> Calling Start %d " % source_id)
 
-    #Create a uridecode bin with the chosen source id
+    # Create a uridecode bin with the chosen source id
     source_bin = create_uridecode_bin(source_id, uri)
 
-    if (not source_bin):
+    if not source_bin:
         sys.stderr.write("Failed to create source bin. Exiting.")
         exit(1)
-    
-    #Add source bin to our list and to pipeline
+
+    # Add source bin to our list and to pipeline
     g_source_bin_list[source_id] = source_bin
     pipeline.add(source_bin)
 
-    #Set state of source bin to playing
+    # Set state of source bin to playing
     state_return = g_source_bin_list[source_id].set_state(Gst.State.PLAYING)
 
     if state_return == Gst.StateChangeReturn.SUCCESS:
-        print("STATE CHANGE SUCCESS\n")
+        print("\t + STATE CHANGE SUCCESS\n")
         source_id += 1
 
     elif state_return == Gst.StateChangeReturn.FAILURE:
-        print("STATE CHANGE FAILURE\n")
-    
+        print("\t - STATE CHANGE FAILURE\n")
+
     elif state_return == Gst.StateChangeReturn.ASYNC:
         state_return = g_source_bin_list[source_id].get_state(Gst.CLOCK_TIME_NONE)
         source_id += 1
 
     elif state_return == Gst.StateChangeReturn.NO_PREROLL:
-        print("STATE CHANGE NO PREROLL\n")
+        print("\t * STATE CHANGE NO PREROLL\n")
 
     g_num_sources += 1
 
-    #If reached the maximum number of sources, delete sources every 10 seconds
-    if (g_num_sources == MAX_NUM_SOURCES):
+    # If reached the maximum number of sources, delete sources every 10 seconds
+    if g_num_sources == MAX_NUM_SOURCES:
         GLib.timeout_add_seconds(10, delete_sources, g_source_bin_list)
         return False
-    
+
     return True
+
 
 def bus_call(bus, message, loop):
     global g_eos_list
@@ -286,7 +293,7 @@ def bus_call(bus, message, loop):
     if t == Gst.MessageType.EOS:
         sys.stdout.write("End-of-stream\n")
         loop.quit()
-    elif t==Gst.MessageType.WARNING:
+    elif t == Gst.MessageType.WARNING:
         err, debug = message.parse_warning()
         sys.stderr.write("Warning: %s: %s\n" % (err, debug))
     elif t == Gst.MessageType.ERROR:
@@ -295,14 +302,15 @@ def bus_call(bus, message, loop):
         loop.quit()
     elif t == Gst.MessageType.ELEMENT:
         struct = message.get_structure()
-        #Check for stream-eos message
+        # Check for stream-eos message
         if struct is not None and struct.has_name("stream-eos"):
             parsed, stream_id = struct.get_uint("stream-id")
             if parsed:
-                #Set eos status of stream to True, to be deleted in delete-sources
+                # Set eos status of stream to True, to be deleted in delete-sources
                 print("Got EOS from stream %d" % stream_id)
                 g_eos_list[stream_id] = True
     return True
+
 
 def main(args):
     global g_num_sources
@@ -320,12 +328,13 @@ def main(args):
     global nvosd
     global tiler
     global tracker
-     # Check input arguments
+
+    # Check input arguments
     if len(args) != 2:
-        sys.stderr.write("usage: %s <uri1> \n" % args[0])
+        sys.stderr.write(f"usage: {args[0]} <uri1>", " \n ")
         sys.exit(1)
 
-    num_sources=len(args)-1
+    num_sources = len(args) - 1
 
     global platform_info
     platform_info = PlatformInfo()
@@ -334,33 +343,39 @@ def main(args):
 
     # Create gstreamer elements */
     # Create Pipeline element that will form a connection of other elements
-    print("Creating Pipeline \n ")
+    print("===> Creating Pipeline \n ")
     pipeline = Gst.Pipeline()
     is_live = False
 
     if not pipeline:
         sys.stderr.write(" Unable to create Pipeline \n")
-    print("Creating streammux \n ")
 
+    print("===> Creating streammux \n ")
     # Create nvstreammux instance to form batches from one or more sources.
     streammux = Gst.ElementFactory.make("nvstreammux", "Stream-muxer")
     if not streammux:
         sys.stderr.write(" Unable to create NvStreamMux \n")
 
     streammux.set_property("batched-push-timeout", 25000)
-    streammux.set_property("batch-size", 30)
+    streammux.set_property("batch-size", 30)  # TODO ?
     streammux.set_property("gpu_id", GPU_ID)
 
     pipeline.add(streammux)
     streammux.set_property("live-source", 1)
+    # TODO uri -> ???
     uri = args[1]
+    print("===> Creating source_bin")
     for i in range(num_sources):
-        print("Creating source_bin ",i," \n ")
-        uri_name=args[i+1]
-        if uri_name.find("rtsp://") == 0 :
+        uri_name = args[i + 1]
+        print(
+            f"\t + Creating source_bin {i} ",
+            f"...{uri_name[-18:]}" if len(uri_name) > 18 else uri_name,
+            "\n" if i == num_sources - 1 else "",
+        )
+        if uri_name.find("rtsp://") == 0:
             is_live = True
-        #Create first source bin and add to pipeline
-        source_bin=create_uridecode_bin(i, uri_name)
+        # Create first source bin and add to pipeline
+        source_bin = create_uridecode_bin(i, uri_name)
         if not source_bin:
             sys.stderr.write("Failed to create source bin. Exiting. \n")
             sys.exit(1)
@@ -369,27 +384,27 @@ def main(args):
 
     g_num_sources = num_sources
 
-    print("Creating Pgie \n ")
+    print("===> Creating Pgie \n ")
     pgie = Gst.ElementFactory.make("nvinfer", "primary-inference")
     if not pgie:
         sys.stderr.write(" Unable to create pgie \n")
 
-    print("Creating nvtracker \n ")
+    print("===> Creating nvtracker \n ")
     tracker = Gst.ElementFactory.make("nvtracker", "tracker")
     if not tracker:
         sys.stderr.write(" Unable to create tracker \n")
 
-    print("Creating tiler \n ")
-    tiler=Gst.ElementFactory.make("nvmultistreamtiler", "nvtiler")
+    print("===> Creating tiler \n ")
+    tiler = Gst.ElementFactory.make("nvmultistreamtiler", "nvtiler")
     if not tiler:
         sys.stderr.write(" Unable to create tiler \n")
 
-    print("Creating nvvidconv \n ")
+    print("===> Creating nvvidconv \n ")
     nvvideoconvert = Gst.ElementFactory.make("nvvideoconvert", "convertor")
     if not nvvideoconvert:
         sys.stderr.write(" Unable to create nvvidconv \n")
 
-    print("Creating nvosd \n ")
+    print("===> Creating nvosd \n ")
     nvosd = Gst.ElementFactory.make("nvdsosd", "onscreendisplay")
     if not nvosd:
         sys.stderr.write(" Unable to create nvosd \n")
@@ -402,7 +417,6 @@ def main(args):
     if not sgie1:
         sys.stderr.write(" Unable to make sgie2 \n")
 
-
     if platform_info.is_integrated_gpu():
         print("Creating nv3dsink \n")
         sink = Gst.ElementFactory.make("nv3dsink", "nv3d-sink")
@@ -413,76 +427,87 @@ def main(args):
             print("Creating nv3dsink \n")
             sink = Gst.ElementFactory.make("nv3dsink", "nv3d-sink")
         else:
-            print("Creating EGLSink \n")
+            print("===> Creating EGLSink \n")
             sink = Gst.ElementFactory.make("nveglglessink", "nvvideo-renderer")
         if not sink:
             sys.stderr.write(" Unable to create egl sink \n")
     if is_live:
-        print("Atleast one of the sources is live")
-        streammux.set_property('live-source', 1)
+        print("===> Atleast one of the sources is live")
+        streammux.set_property("live-source", 1)
 
-    #Set streammux width and height
-    streammux.set_property('width', MUXER_OUTPUT_WIDTH)
-    streammux.set_property('height', MUXER_OUTPUT_HEIGHT)
-    #Set pgie, sgie1, and sgie2 configuration file paths
-    pgie.set_property('config-file-path', PGIE_CONFIG_FILE)
-    sgie1.set_property('config-file-path', SGIE1_CONFIG_FILE)
-    sgie2.set_property('config-file-path', SGIE2_CONFIG_FILE)
+    # Set streammux width and height
+    streammux.set_property("width", MUXER_OUTPUT_WIDTH)
+    streammux.set_property("height", MUXER_OUTPUT_HEIGHT)
+    # Set pgie, sgie1, and sgie2 configuration file paths
+    pgie.set_property("config-file-path", PGIE_CONFIG_FILE)
+    sgie1.set_property("config-file-path", SGIE1_CONFIG_FILE)
+    sgie2.set_property("config-file-path", SGIE2_CONFIG_FILE)
 
-    #Set properties of tracker
+    # Set properties of tracker
     config = configparser.ConfigParser()
     config.read(TRACKER_CONFIG_FILE)
-    config.sections()
+    # config.sections()
+    print(f"[=] DEBUG {[f"{k}={config.get('tracker', k)}" for k in config['tracker']]}")
+    for key in config["tracker"]:
+        if key == "tracker-width":
+            tracker_width = config.getint("tracker", key)
+            tracker.set_property("tracker-width", tracker_width)
+        if key == "tracker-height":
+            tracker_height = config.getint("tracker", key)
+            tracker.set_property("tracker-height", tracker_height)
+        if key == "gpu-id":
+            tracker_gpu_id = config.getint("tracker", key)
+            tracker.set_property("gpu_id", tracker_gpu_id)
+        if key == "ll-lib-file":
+            tracker_ll_lib_file = config.get("tracker", key)
+            tracker.set_property("ll-lib-file", tracker_ll_lib_file)
+        if key == "ll-config-file":
+            tracker_ll_config_file = config.get("tracker", key)
+            tracker.set_property("ll-config-file", tracker_ll_config_file)
+        if key == "enable-batch-process":
+            tracker_enable_batch_process = config.getint("tracker", key)
+            tracker.set_property("enable_batch_process", tracker_enable_batch_process)
 
-    for key in config['tracker']:
-        if key == 'tracker-width' :
-            tracker_width = config.getint('tracker', key)
-            tracker.set_property('tracker-width', tracker_width)
-        if key == 'tracker-height' :
-            tracker_height = config.getint('tracker', key)
-            tracker.set_property('tracker-height', tracker_height)
-        if key == 'gpu-id' :
-            tracker_gpu_id = config.getint('tracker', key)
-            tracker.set_property('gpu_id', tracker_gpu_id)
-        if key == 'll-lib-file' :
-            tracker_ll_lib_file = config.get('tracker', key)
-            tracker.set_property('ll-lib-file', tracker_ll_lib_file)
-        if key == 'll-config-file' :
-            tracker_ll_config_file = config.get('tracker', key)
-            tracker.set_property('ll-config-file', tracker_ll_config_file)
-        if key == 'enable-batch-process' :
-            tracker_enable_batch_process = config.getint('tracker', key)
-            tracker.set_property('enable_batch_process', tracker_enable_batch_process)
+    # Set necessary properties of the nvinfer element, the necessary ones are:
+    # g_source_id_list / g_eos_list / g_source_enabled / g_source_bin_list
+    # 长度固定为 MAX_NUM_SOURCES，不会变 仅元素内容会变(槽位启用/禁用、bin 的创建/移除) batch-size 与槽位数量一致即可
+    pgie_batch_size = pgie.get_property("batch-size")
+    if pgie_batch_size < MAX_NUM_SOURCES:
+        print(
+            "WARNING: Overriding infer-config batch-size",
+            pgie_batch_size,
+            " with number of sources ",
+            num_sources,
+            " \n",
+        )
+    pgie.set_property("batch-size", MAX_NUM_SOURCES)
 
-    #Set necessary properties of the nvinfer element, the necessary ones are:
-    pgie_batch_size=pgie.get_property("batch-size")
-    if(pgie_batch_size < MAX_NUM_SOURCES):
-        print("WARNING: Overriding infer-config batch-size",pgie_batch_size," with number of sources ", num_sources," \n")
-    pgie.set_property("batch-size",MAX_NUM_SOURCES)
-
-    #Set gpu IDs of the inference engines
+    # Set gpu IDs of the inference engines
     pgie.set_property("gpu_id", GPU_ID)
     sgie1.set_property("gpu_id", GPU_ID)
     sgie2.set_property("gpu_id", GPU_ID)
 
-    #Set tiler properties
-    tiler_rows=int(math.sqrt(num_sources))
-    tiler_columns=int(math.ceil((1.0*num_sources)/tiler_rows))
-    tiler.set_property("rows",tiler_rows)
-    tiler.set_property("columns",tiler_columns)
+    # Set tiler properties
+    tiler_rows = int(math.sqrt(num_sources))
+    tiler_columns = int(math.ceil((1.0 * num_sources) / tiler_rows))
+    tiler.set_property("rows", tiler_rows)
+    tiler.set_property("columns", tiler_columns)
     tiler.set_property("width", TILED_OUTPUT_WIDTH)
     tiler.set_property("height", TILED_OUTPUT_HEIGHT)
 
-    #Set gpu IDs of tiler, nvvideoconvert, and nvosd
+    # Set gpu IDs of tiler, nvvideoconvert, and nvosd
     tiler.set_property("gpu_id", GPU_ID)
     nvvideoconvert.set_property("gpu_id", GPU_ID)
     nvosd.set_property("gpu_id", GPU_ID)
 
-    #Set gpu ID of sink if not integrated gpu
-    if(not platform_info.is_integrated_gpu() and not platform_info.is_platform_aarch64()):
+    # Set gpu ID of sink if not integrated gpu
+    if (
+        not platform_info.is_integrated_gpu()
+        and not platform_info.is_platform_aarch64()
+    ):
         sink.set_property("gpu_id", GPU_ID)
 
-    print("Adding elements to Pipeline \n")
+    print("===> Adding elements to Pipeline \n")
     pipeline.add(pgie)
     pipeline.add(tracker)
     pipeline.add(sgie1)
@@ -495,7 +520,7 @@ def main(args):
     # We link elements in the following order:
     # sourcebin -> streammux -> nvinfer -> nvtracker -> nvdsanalytics ->
     # nvtiler -> nvvideoconvert -> nvdsosd -> sink
-    print("Linking elements in the Pipeline \n")
+    print("===> Linking elements in the Pipeline \n")
     streammux.link(pgie)
     pgie.link(tracker)
     tracker.link(sgie1)
@@ -506,41 +531,65 @@ def main(args):
     nvosd.link(sink)
 
     sink.set_property("sync", 0)
-    sink.set_property("qos",0)
+    sink.set_property("qos", 0)
 
     # create an event loop and feed gstreamer bus mesages to it
     loop = GLib.MainLoop()
     bus = pipeline.get_bus()
     bus.add_signal_watch()
-    bus.connect ("message", bus_call, loop)
+    bus.connect("message", bus_call, loop)
 
     pipeline.set_state(Gst.State.PAUSED)
 
     # List the sources
-    print("Now playing...")
+    print("===> Now playing...")
     for i, source in enumerate(args):
-        if (i != 0):
-            print(i, ": ", source)
+        if i != 0:
+            print(f"{i}: [{source}]", " \n" if i == len(args) - 1 else "")
 
-    print("Starting pipeline \n")
-    # start play back and listed to events		
+    print("===> Starting pipeline \n")
+    # start play back and listed to events
     pipeline.set_state(Gst.State.PLAYING)
 
-    print("Waiting for state change\n")
-    status, state, pending = pipeline.get_state(Gst.CLOCK_TIME_NONE)
-    print(f"Current state {state}, pending state {pending}, status {status}\n")
+    print("===> Waiting for state change\n")
+    # def get_state(timeout: int) -> Tuple[StateChangeReturn, State, State]
+    # get_state(timeout): timeout=Gst.CLOCK_TIME_NONE 表示无限等待直到异步状态切换完成；
+    # 若 timeout=0 则立即返回不等待。返回: (StateChangeReturn, 当前状态, 待定状态)
+    ret_val_status, state, pending = pipeline.get_state(Gst.CLOCK_TIME_NONE)
+    print(
+        f"===> Current state {state}, pending state {pending}, status {ret_val_status}\n"
+    )
+
     if (state == Gst.State.PLAYING) and (pending == Gst.State.VOID_PENDING):
+        """
+        在 管道 处于 PLAYING 并且 当前没有待切换的状态时 任务管道已就绪 可以 安全做 动态加源
+        Gst.State.VOID_PENDING 表示没有待定的状态切换
+
+        GLib.timeout_add_seconds(10s, callback, ...) 函数行为逻辑
+        过 10 秒后调用一次 callback;若 callback 返回 True,会再安排"10 秒后再调一次",如此反复;若 返回 False,就取消定时,不再调用
+        实现 管道跑起来一段时间后再动态添加新源 的逻辑
+
+        在 add_sources() 函数内 另 添加一个 GLib.timeout_add_seconds(10, delete_sources, g_source_bin_list)
+        当 当前流数 达到 MAX_NUM_SOURCES 时 就开始 每隔 10s 停掉一个流
+        """
         GLib.timeout_add_seconds(10, add_sources, g_source_bin_list)
     else:
-        print("Pipeline is not in playing state to add sources\n")
+        print("+++> Pipeline is not in playing state to add sources\n")
 
     try:
         loop.run()
     except:
         pass
     # cleanup
-    print("Exiting app\n")
+    print("===> Exiting app\n")
     pipeline.set_state(Gst.State.NULL)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
+    print(f"DEBUG {sys.argv}", " \n ")
     sys.exit(main(sys.argv))
+
+"""
+python deepstream_rt_src_add_del.py \
+    file:///home/good/wkspace/deepstream-sdk/ds8samples/streams/sample_720p.mp4
+"""
