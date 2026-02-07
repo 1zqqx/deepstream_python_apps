@@ -15,29 +15,40 @@
 # limitations under the License.
 ################################################################################
 
-# The values in the config file are overridden by values set through GObject
-# properties.
+# 说明: 本配置文件中的值会被 GObject 属性覆盖（若在代码中通过 set_property 设置）
 
+# =============================================================================
+# [property] 全局属性区块 - 作用于整个 nvdsanalytics 插件
+# =============================================================================
 [property]
+# enable: 1=启用 nvdsanalytics 插件, 0=禁用
 enable=1
-#Width height used for configuration to which below configs are configured
+# config-width/height: 配置所基于的参考分辨率，下方 ROI/线等坐标均以此分辨率为准
+# 若实际输入分辨率不同，插件会按比例缩放坐标
 config-width=1920
 config-height=1080
-#osd-mode 0: Dont display any lines, rois and text
-#         1: Display only lines, rois and static text i.e. labels
-#         2: Display all info from 1 plus information about counts
+# osd-mode: 画面上叠加显示的模式
+#   0 = 不显示任何线条、ROI 和文字
+#   1 = 只显示线条、ROI 和静态标签
+#   2 = 显示 1 的全部内容 + 统计计数信息（ROI 内人数、越线累计、拥挤状态等）
 osd-mode=2
-#Set OSD font size that has to be displayed
+# display-font-size: OSD 叠加文字的字体大小（单位：像素）
 display-font-size=12
 
-## Per stream configuration
+# =============================================================================
+# [roi-filtering-stream-N] ROI 过滤 - 按区域筛选/移除对象元数据
+# N 为流索引（pad_index），如 stream-0 对应第一路输入
+# 用途：只保留 ROI 内/外的对象，其余从 metadata 中移除，下游将不再处理
+# =============================================================================
 [roi-filtering-stream-0]
-#enable or disable following feature
+# enable: 1=启用此流上的 ROI 过滤, 0=禁用
 enable=1
-#ROI to filter select objects, and remove from meta data
+# roi-RF: ROI 多边形顶点坐标，格式 x1;y1;x2;y2;x3;y3;x4;y4（4 个点，顺时针或逆时针）
+# 坐标基于 config-width/height 分辨率
 roi-RF=295;643;579;634;642;913;56;828
-#remove objects in the ROI
+# inverse-roi: 0=保留 ROI 内的对象、移除 ROI 外的; 1=保留 ROI 外的、移除 ROI 内的
 inverse-roi=0
+# class-id: 仅对此类别生效，-1 表示所有类别
 class-id=-1
 
 ## Per stream configuration
@@ -46,30 +57,43 @@ class-id=-1
 enable=1
 #ROI to filter select objects, and remove from meta data
 roi-RF=295;643;579;634;642;913;56;828
-#remove objects in the ROI
+# inverse-roi=1: 本流为“反向”模式，移除 ROI 内的对象（常用于排除某区域）
 inverse-roi=1
+# class-id=0: 仅对 class 0（如 Vehicle）生效
 class-id=0
 
+# =============================================================================
+# [overcrowding-stream-N] 拥挤检测 - 检测 ROI 内对象数量是否超过阈值
+# =============================================================================
 [overcrowding-stream-1]
 enable=1
+# roi-OC: 拥挤检测的 ROI 区域，格式同 roi-RF
 roi-OC=295;643;579;634;642;913;56;828
-#no of objects that will trigger OC
+# object-threshold: 触发拥挤判定的对象数量阈值，超过则 ocStatus 为 True
 object-threshold=2
+# class-id: -1 表示统计所有类别，也可指定仅统计某类（如 0=车辆）
 class-id=-1
 
+# =============================================================================
+# [line-crossing-stream-N] 越线检测 - 统计对象穿过指定线段的方向与次数
+# 每条线可配置 Label（如 Entry/Exit）、方向、以及计数模式
+# =============================================================================
 [line-crossing-stream-0]
 enable=1
-#Label;direction;lc
-#line-crossing-Entry=1072;911;1143;1058;944;1020;1297;1020;
+# line-crossing-Label: 格式 x1;y1;x2;y2;x3;y3;x4;y4
+#   前 4 个值 (x1,y1)->(x2,y2): 越线方向向量（箭头方向）
+#   后 4 个值 (x3,y3)->(x4,y4): 实际检测线的端点
+# Label 为自定义名称，会显示在 OSD 上，如 Entry/Exit
+#line-crossing-Entry=1072;911;1143;1058;944;1020;1297;1020
 line-crossing-Exit=789;672;1084;900;851;773;1203;732
+# class-id: 仅统计此类别的越线，0 通常表示 Vehicle
 class-id=0
-#extended when 0- only counts crossing on the configured Line
-#              1- assumes extended Line crossing counts all the crossing
+# extended: 0=只计严格穿过配置线段的; 1=将线无限延长，穿过延长线也计数
 extended=0
-#LC modes supported:
-#loose   : counts all crossing without strong adherence to direction
-#balanced: Strict direction adherence expected compared to mode=loose
-#strict  : Strict direction adherence expected compared to mode=balanced
+# mode: 越线判定的严格程度
+#   loose   : 对方向要求最松，所有穿过都计数
+#   balanced: 方向要求更严格
+#   strict  : 方向要求最严格
 mode=loose
 
 [line-crossing-stream-1]
@@ -87,17 +111,22 @@ extended=0
 #strict  : Strict direction adherence expected compared to mode=balanced
 mode=loose
 
+# =============================================================================
+# [direction-detection-stream-N] 方向检测 - 判断对象移动方向是否与指定向量一致
+# 用于区分“进入/离开”等场景，可与越线结合使用
+# =============================================================================
 [direction-detection-stream-0]
 enable=1
-#Label;direction;
-direction-South=284;840;360;662;
-direction-North=1106;622;1312;701;
+# direction-Label: 格式 x1;y1;x2;y2，表示方向向量从 (x1,y1) 指向 (x2,y2)
+# Label 为自定义名称（如 South/North），会出现在对象级 metadata 的 dirStatus 中
+direction-South=284;840;360;662
+direction-North=1106;622;1312;701
+# class-id: 仅对此类别做方向检测
 class-id=0
 
 [direction-detection-stream-1]
 enable=1
-#Label;direction;
-direction-South=284;840;360;662;
-direction-North=1106;622;1312;701;
+direction-South=284;840;360;662
+direction-North=1106;622;1312;701
 class-id=0
 

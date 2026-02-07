@@ -15,6 +15,16 @@
 # limitations under the License.
 ################################################################################
 
+# =============================================================================
+# nvtracker 主配置文件 - 指定跟踪器运行参数及低层跟踪库
+#
+# nvtracker 采用“主配置 + 低层库配置”两层结构:
+#   1. 本文件(dsnvanalytics_tracker_config.txt): 由 nvtracker 插件直接读取
+#   2. ll-config-file 指向的 YAML: 由低层库 libnvds_nvmultiobjecttracker.so 读取
+#
+# 低层库支持多种跟踪算法: NvDCF(推荐)、KLT、IOU 等，通过 ll-lib-file 选择
+# =============================================================================
+
 # Mandatory properties for the tracker:
 #   tracker-width
 #   tracker-height: needs to be multiple of 6 for NvDCF
@@ -22,9 +32,33 @@
 #   ll-lib-file: path to low-level tracker lib
 #   ll-config-file: required for NvDCF, optional for KLT and IOU
 #
+
 [tracker]
+# tracker-width/height: 跟踪器工作分辨率（像素）
+# 输入帧会被缩放到此分辨率再送入跟踪算法，影响精度与性能
+# 对 NvDCF 算法: height 需为 6 的倍数（部分版本要求 32 的倍数）
 tracker-width=640
 tracker-height=384
+
+# gpu-id: 运行跟踪器的 GPU 设备 ID
 gpu-id=0
+
+# ll-lib-file: 低层跟踪库 .so 路径
+# libnvds_nvmultiobjecttracker.so 支持 NvDCF/KLT/IOU 等多种算法
 ll-lib-file=/opt/nvidia/deepstream/deepstream/lib/libnvds_nvmultiobjecttracker.so
+
+# ll-config-file: 低层库的配置文件路径（YAML 格式）
+# NvDCF 必须指定；KLT/IOU 可选。内容见 config_tracker_NvDCF_perf.yml
 ll-config-file=config_tracker_NvDCF_perf.yml
+
+# =============================================================================
+# 两层文件 配置关系
+# nvtracker 插件
+#    │
+#    ├─ 读取 dsnvanalytics_tracker_config.txt
+#    │      └─ 分辨率、GPU、ll-lib-file、ll-config-file
+#    │
+#    └─ 加载 libnvds_nvmultiobjecttracker.so
+#           └─ 读取 ll-config-file 指向的 config_tracker_NvDCF_perf.yml
+#                   └─ NvDCF 的详细算法与策略参数
+# =============================================================================
