@@ -1,0 +1,258 @@
+Factory Details:
+  Rank                     primary + 1 (257)
+  Long-name                V4L2 H.265 Encoder
+  Klass                    Codec/Encoder/Video
+  Description              Encode H.265 video streams via V4L2 API
+  Author                   Viranjan Pagar <vpagar@nvidia.com>, Amit Pandya <apandya@nvidia.com>
+
+Plugin Details:
+  Name                     nvvideo4linux2
+  Description              Nvidia elements for Video 4 Linux
+  Filename                 /usr/lib/x86_64-linux-gnu/gstreamer-1.0/deepstream/libgstnvvideo4linux2.so
+  Version                  1.14.0
+  License                  LGPL
+  Source module            nvvideo4linux2
+  Binary package           nvvideo4linux2
+  Origin URL               http://nvidia.com/
+
+GObject
+ +----GInitiallyUnowned
+       +----GstObject
+             +----GstElement
+                   +----GstVideoEncoder
+                         +----GstV4l2VideoEnc
+                               +----GstV4l2H265Enc
+                                     +----nvv4l2h265enc
+
+实现的接口:
+  GstPreset
+
+Pad Templates:
+  SINK template: 'sink'
+    Availability: Always
+    Capabilities:
+      video/x-raw(memory:NVMM)
+                  width: [ 1, 2147483647 ]
+                 height: [ 1, 2147483647 ]
+                 format: { (string)I420, (string)NV12, (string)P010_10LE, (string)Y444, (string)Y444_10LE, (string)NV24 }
+              framerate: [ 0/1, 2147483647/1 ]
+  
+  SRC template: 'src'
+    Availability: Always
+    Capabilities:
+      video/x-h265
+          stream-format: byte-stream
+              alignment: au
+
+Element has no clocking capabilities.
+Element has no URI handling capabilities.
+
+Pads:
+  SINK: 'sink'
+    Pad Template: 'sink'
+  SRC: 'src'
+    Pad Template: 'src'
+
+Element Properties:
+
+  SliceIntraRefreshInterval: Set SliceIntraRefreshInterval
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 0 
+  
+  aq                  : Enable spatial AQ and set its stength (range 1-15, 0-auto)
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Unsigned Integer. Range: 0 - 15 Default: 0 
+  
+  bit-packetization   : Whether or not Packet size is based upon Number Of bits
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Boolean. Default: false
+  
+  bitrate             : Set bitrate for v4l2 encode
+                        flags: 可读, 可写, 可以在NULL、READY、PAUSED或PLAYING状态下改变
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 4000000 
+  
+  capture-io-mode     : Capture I/O mode (matches src pad)
+                        flags: 可读, 可写
+                        Enum "GstNvV4l2IOMode" Default: 0, "auto"
+                           (0): auto             - GST_V4L2_IO_AUTO
+                           (2): mmap             - GST_V4L2_IO_MMAP
+                           (5): dmabuf-import    - GST_V4L2_IO_DMABUF_IMPORT
+  
+  constqp             : Set unsigned integer values for constqp, control-rate should be set to GST_V4L2_VIDENC_CONSTANT_QP,
+			Use string with values of constQP in constQpI:constQpP:constQpB order, to set the property.
+                        flags: 可读, 可写
+                        String. Default: null
+  
+  control-rate        : Set control rate for v4l2 encode
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Enum "GstV4l2VideoEncRateControlType" Default: 1, "constant_bitrate"
+                           (0): variable_bitrate - GST_V4L2_VIDENC_VARIABLE_BITRATE
+                           (1): constant_bitrate - GST_V4L2_VIDENC_CONSTANT_BITRATE
+                           (2): constantQP       - GST_V4L2_VIDENC_CONSTANT_QP
+  
+  copy-meta           : Copies input metadata on output buffer
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Boolean. Default: false
+  
+  cq                  : Set targetQuality (Constant Quality) level for VBR mode. (range 0-51, 0-auto)
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Unsigned Integer. Range: 0 - 51 Default: 0 
+  
+  cudaenc-memtype     : Set to specify memory type for cuda input buffers
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Enum "CudaEncMemType" Default: 0, "memtype_device"
+                           (0): memtype_device   - Memory type Device
+                           (1): memtype_pinned   - Memory type Host Pinned
+                           (2): memtype_unified  - Memory type Unified
+  
+  device              : Device location
+                        flags: 可读
+                        String. Default: "/dev/v4l2-nvenc"
+  
+  device-fd           : File descriptor of the device
+                        flags: 可读
+                        Integer. Range: -1 - 2147483647 Default: -1 
+  
+  device-name         : Name of the device
+                        flags: Opening in BLOCKING MODE 
+可读
+                        String. Default: ""
+  
+  enable-lossless     : Enable lossless encoding for YUV444
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Boolean. Default: false
+  
+  extended-colorformat: Set Extended ColorFormat pixel values 0 to 255 in VUI info
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  extra-controls      : Extra v4l2 controls (CIDs) for the device
+                        flags: 可读, 可写
+                        Boxed pointer of type "GstStructure"
+  
+  force-idr           : Force an IDR frame
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Boolean. Default: false
+  
+  force-intra         : Force an INTRA frame
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Boolean. Default: false
+  
+  gpu-id              : Set to GPU Device ID for Encoder 
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 0 
+  
+  idrinterval         : Encoding IDR Frame occurance frequency
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 256 
+  
+  iframeinterval      : Encoding Intra Frame occurance frequency
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 4294967295 
+  
+  initqp              : Set unsigned integer values for initqp,
+			Use string with values of initQP in IInitQP:PInitQP:BInitQP order, to set the property.
+			This provides rough hint to encoder to influence the qp difference between I, P and B
+                        flags: 可读, 可写
+                        String. Default: null
+  
+  insert-aud          : Insert H.265 Access Unit Delimiter(AUD)
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  insert-sps-pps      : Insert H.265 SPS, PPS at every IDR frame
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  insert-vui          : Insert H.265 VUI(Video Usability Information) in SPS
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
+  intra-refresh       : Intra Refresh Parameters,
+			Use string with unsigned integer values of Intra Refresh 
+			in enableIntraRefresh,intraRefreshPeriod,intraRefreshCnt in same order to set the property. e.g. 1,30,1
+                        flags: 可读, 可写
+                        String. Default: "1,30,1"
+  
+  maxbitrate          : Set maxbitrate for v4l2 encode. This mode is specified by setting rateControlMode to VBR
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 0 
+  
+  min-force-key-unit-interval: Minimum interval between force-keyunit requests in nanoseconds
+                        flags: 可读, 可写
+                        Unsigned Integer64. Range: 0 - 18446744073709551615 Default: 0 
+  
+  name                : The name of the object
+                        flags: 可读, 可写
+                        String. Default: "nvv4l2h265enc0"
+  
+  num-B-Frames        : Number of B Frames between two reference frames (not recommended)(Supported only on Xavier)
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Unsigned Integer. Range: 0 - 2 Default: 0 
+  
+  num-Ref-Frames      : Number of Reference Frames for encoder
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Unsigned Integer. Range: 0 - 8 Default: 0 
+  
+  output-io-mode      : Output side I/O mode (matches sink pad)
+                        flags: 可读, 可写
+                        Enum "GstNvV4l2IOMode" Default: 0, "auto"
+                           (0): auto             - GST_V4L2_IO_AUTO
+                           (2): mmap             - GST_V4L2_IO_MMAP
+                           (5): dmabuf-import    - GST_V4L2_IO_DMABUF_IMPORT
+  
+  parent              : The parent of the object
+                        flags: 可读, 可写
+                        Object of type "GstObject"
+  
+  preset-id           : For each tuning info, seven presets from P1 (highest performance) to P7 (lowest performance) 
+			have been provided to control performance/quality trade off. Using these presets will
+			automatically set all relevant encoding parameters for the selected tuning info 
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Unsigned Integer. Range: 1 - 7 Default: 1 
+  
+  profile             : Set profile for v4l2 encode
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Enum "GstV4L2VideoEncProfileType" Default: 0, "Main"
+                           (0): Main             - GST_V4L2_H265_VIDENC_MAIN_PROFILE
+                           (1): Main10           - GST_V4L2_H265_VIDENC_MAIN10_PROFILE
+                           (3): FREXT            - GST_V4L2_H265_VIDENC_FREXT_PROFILE
+  
+  qos                 : Handle Quality-of-Service events from downstream
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  qp-range            : Quantization range for P, I and B frame,
+			Use string with unsigned integer values of Qunatization Range 
+			in MinQpP,MaxQpP:MinQpI,MaxQpI:MinQpB,MaxQpB order, to set the property.
+                        flags: 可读, 可写
+                        String. Default: null
+  
+  sei-uuid            : SEI UUID String of 16 bytes to be set into SEI data
+                        flags: 可读, 可写
+                        String. Default: "NVDS_CUSTOMMETA"
+  
+  slice-header-spacing: Slice Header Spacing number of macroblocks/bits in one packet
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Unsigned Integer64. Range: 0 - 18446744073709551615 Default: 0 
+  
+  temporalaq          : Set this to enable adaptive quantization (Temporal).
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Boolean. Default: false
+  
+  tuning-info-id      : Tuning Info Preset for encoder
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Enum "GstV4L2VideoEncTuingInfoPreset" Default: 2, "LowLatencyPreset"
+                           (1): HighQualityPreset - Tuning Preset for High Quality
+                           (2): LowLatencyPreset - Tuning Preset for Low Latency
+                           (3): UltraLowLatencyPreset - Tuning Preset for Low Latency
+                           (4): LosslessPreset   - Tuning Preset for Lossless
+  
+  vbvbufsize          : Set VBV buffer size in bits.
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 0 
+  
+  vbvinit             : Set VBV initial delay in bits.
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 0 
+  

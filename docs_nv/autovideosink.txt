@@ -1,0 +1,77 @@
+Factory Details:
+  Rank                     none (0)
+  Long-name                Auto video sink
+  Klass                    Sink/Video
+  Description              Wrapper video sink for automatically detected video sink
+  Author                   Jan Schmidt <thaytan@noraisin.net>
+  Documentation            https://gstreamer.freedesktop.org/documentation/autodetect/autovideosink.html
+
+Plugin Details:
+  Name                     autodetect
+  Description              Plugin contains auto-detection plugins for video/audio in- and outputs
+  Filename                 /usr/lib/x86_64-linux-gnu/gstreamer-1.0/libgstautodetect.so
+  Version                  1.24.2
+  License                  LGPL
+  Source module            gst-plugins-good
+  Documentation            https://gstreamer.freedesktop.org/documentation/autodetect/
+  Source release date      2024-04-09
+  Binary package           GStreamer Good Plugins (Ubuntu)
+  Origin URL               https://launchpad.net/ubuntu/+source/gst-plugins-good1.0
+
+GObject
+ +----GInitiallyUnowned
+       +----GstObject
+             +----GstElement
+                   +----GstBin
+                         +----GstAutoDetect
+                               +----GstAutoVideoSink
+
+实现的接口:
+  GstChildProxy
+
+Pad Templates:
+  SINK template: 'sink'
+    Availability: Always
+    Capabilities:
+      ANY
+
+Element has no clocking capabilities.
+Element has no URI handling capabilities.
+
+Pads:
+  SINK: 'sink'
+
+Element Properties:
+
+  async-handling      : The bin will handle Asynchronous state changes
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  filter-caps         : Filter sink candidates using these caps.
+                        flags: 可读, 可写
+                                                   video/x-raw
+
+  
+  message-forward     : Forwards all children messages
+                        flags: 可读, 可写
+                        Boolean. Default: false
+  
+  name                : The name of the object
+                        flags: 可读, 可写
+                        String. Default: "autovideosink0"
+  
+  parent              : The parent of the object
+                        flags: 可读, 可写
+                        Object of type "GstObject"
+  
+  sync                : Sync on the clock
+                        flags: 可读, 可写
+                        Boolean. Default: true
+  
+  ts-offset           : Timestamp offset in nanoseconds
+                        flags: 可读, 可写
+                        Integer64. Range: -9223372036854775808 - 9223372036854775807 Default: 0 
+  
+
+Children:
+  fake-video-sink
