@@ -17,6 +17,7 @@
 # limitations under the License.
 ################################################################################
 import sys
+
 sys.path.append("../")
 from common.bus_call import bus_call
 from common.platform_info import PlatformInfo
@@ -26,9 +27,10 @@ import math
 import time
 from ctypes import *
 import gi
+
 gi.require_version("Gst", "1.0")
 gi.require_version("GstRtspServer", "1.0")
-from gi.repository import Gst, GstRtspServer, GLib
+from gi.repository import Gst, GstRtspServer, GLib  # type: ignore
 import configparser
 import datetime
 
@@ -78,13 +80,15 @@ def pgie_src_pad_buffer_probe(pad, info, u_data):
             break
 
         frame_number = frame_meta.frame_num
-        print(
-            "Frame Number=",
-            frame_number
-        )
+        print("Frame Number=", frame_number)
         if ts_from_rtsp:
-            ts = frame_meta.ntp_timestamp/1000000000 # Retrieve timestamp, put decimal in proper position for Unix format
-            print("RTSP Timestamp:",datetime.datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')) # Convert timestamp to UTC
+            ts = (
+                frame_meta.ntp_timestamp / 1000000000
+            )  # Retrieve timestamp, put decimal in proper position for Unix format
+            print(
+                "RTSP Timestamp:",
+                datetime.datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M:%S"),
+            )  # Convert timestamp to local time
 
         try:
             l_frame = l_frame.next
@@ -118,8 +122,7 @@ def cb_newpad(decodebin, decoder_src_pad, data):
                     "Failed to link decoder src pad to source bin ghost pad\n"
                 )
         else:
-            sys.stderr.write(
-                " Error: Decodebin did not pick nvidia decoder plugin.\n")
+            sys.stderr.write(" Error: Decodebin did not pick nvidia decoder plugin.\n")
 
 
 def decodebin_child_added(child_proxy, Object, name, user_data):
@@ -162,9 +165,7 @@ def create_source_bin(index, uri):
     # cb_newpad callback, we will set the ghost pad target to the video decoder
     # src pad.
     Gst.Bin.add(nbin, uri_decode_bin)
-    bin_pad = nbin.add_pad(
-        Gst.GhostPad.new_no_target(
-            "src", Gst.PadDirection.SRC))
+    bin_pad = nbin.add_pad(Gst.GhostPad.new_no_target("src", Gst.PadDirection.SRC))
     if not bin_pad:
         sys.stderr.write(" Failed to add ghost pad in source bin \n")
         return None
@@ -214,7 +215,7 @@ def main(args):
         srcpad.link(sinkpad)
 
     print("Creating Pgie \n ")
-    if gie=="nvinfer":
+    if gie == "nvinfer":
         pgie = Gst.ElementFactory.make("nvinfer", "primary-inference")
     else:
         pgie = Gst.ElementFactory.make("nvinferserver", "primary-inference")
@@ -232,8 +233,7 @@ def main(args):
     nvosd = Gst.ElementFactory.make("nvdsosd", "onscreendisplay")
     if not nvosd:
         sys.stderr.write(" Unable to create nvosd \n")
-    nvvidconv_postosd = Gst.ElementFactory.make(
-        "nvvideoconvert", "convertor_postosd")
+    nvvidconv_postosd = Gst.ElementFactory.make("nvvideoconvert", "convertor_postosd")
     if not nvvidconv_postosd:
         sys.stderr.write(" Unable to create nvvidconv_postosd \n")
 
@@ -256,9 +256,10 @@ def main(args):
     if platform_info.is_integrated_gpu():
         encoder.set_property("preset-level", 1)
         encoder.set_property("insert-sps-pps", 1)
-        #encoder.set_property("bufapi-version", 1)
+        # encoder.set_property("bufapi-version", 1)
 
     # Make the payload-encode video into RTP packets
+    # rtph264pay: 把 H.264 编码视频按 RFC 6184 切片并封装为 RTP 包 用于实时网络传输
     if codec == "H264":
         rtppay = Gst.ElementFactory.make("rtph264pay", "rtppay")
         print("Creating H264 rtppay")
@@ -267,6 +268,8 @@ def main(args):
         print("Creating H265 rtppay")
     if not rtppay:
         sys.stderr.write(" Unable to create rtppay")
+    # NOTE
+    rtppay.set_property("config-interval", 1)
 
     # Make the UDP sink
     updsink_port_num = 5400
@@ -283,15 +286,15 @@ def main(args):
     streammux.set_property("height", 1080)
     streammux.set_property("batch-size", number_sources)
     streammux.set_property("batched-push-timeout", MUXER_BATCH_TIMEOUT_USEC)
-    
+
     if ts_from_rtsp:
         streammux.set_property("attach-sys-ts", 0)
 
-    if gie=="nvinfer":
+    if gie == "nvinfer":
+        # NOTE
         pgie.set_property("config-file-path", "dstest1_pgie_config.txt")
     else:
         pgie.set_property("config-file-path", "dstest1_pgie_inferserver_config.txt")
-
 
     pgie_batch_size = pgie.get_property("batch-size")
     if pgie_batch_size != number_sources:
@@ -339,7 +342,7 @@ def main(args):
     bus.add_signal_watch()
     bus.connect("message", bus_call, loop)
 
-    pgie_src_pad=pgie.get_static_pad("src")
+    pgie_src_pad = pgie.get_static_pad("src")
     if not pgie_src_pad:
         sys.stderr.write(" Unable to get src pad \n")
     else:
@@ -361,9 +364,13 @@ def main(args):
     server.get_mount_points().add_factory("/ds-test", factory)
 
     print(
-        "\n *** DeepStream: Launched RTSP Streaming at rtsp://localhost:%d/ds-test ***\n\n"
-        % rtsp_port_num
+        "\n",
+        f"*** DeepStream: Launched RTSP Streaming at rtsp://localhost:{rtsp_port_num}/ds-test ***",
+        "\n\n",
     )
+
+    # export GST_DEBUG_DUMP_DOT_DIR=/target_dir
+    Gst.debug_bin_to_dot_file(pipeline, Gst.DebugGraphDetails.ALL, "graph")
 
     # start play back and listen to events
     print("Starting pipeline \n")
@@ -377,19 +384,41 @@ def main(args):
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='RTSP Output Sample Application Help ')
-    parser.add_argument("-i", "--input",
-                  help="Path to input H264 elementry stream", nargs="+", default=["a"], required=True)
-    parser.add_argument("-g", "--gie", default="nvinfer",
-                  help="choose GPU inference engine type nvinfer or nvinferserver , default=nvinfer", choices=['nvinfer','nvinferserver'])
-    parser.add_argument("-c", "--codec", default="H264",
-                  help="RTSP Streaming Codec H264/H265 , default=H264", choices=['H264','H265'])
-    parser.add_argument("-b", "--bitrate", default=4000000,
-                  help="Set the encoding bitrate ", type=int)
-    parser.add_argument("--rtsp-ts", action="store_true", default=False, dest='rtsp_ts', help="Attach NTP timestamp from RTSP source",
+    parser = argparse.ArgumentParser(description="RTSP Output Sample Application Help ")
+    parser.add_argument(
+        "-i",
+        "--input",
+        help="Path to input H264 elementry stream",
+        nargs="+",
+        default=["a"],
+        required=True,
+    )
+    parser.add_argument(
+        "-g",
+        "--gie",
+        default="nvinfer",
+        help="choose GPU inference engine type nvinfer or nvinferserver , default=nvinfer",
+        choices=["nvinfer", "nvinferserver"],
+    )
+    parser.add_argument(
+        "-c",
+        "--codec",
+        default="H264",
+        help="RTSP Streaming Codec H264/H265 , default=H264",
+        choices=["H264", "H265"],
+    )
+    parser.add_argument(
+        "-b", "--bitrate", default=4000000, help="Set the encoding bitrate ", type=int
+    )
+    parser.add_argument(
+        "--rtsp-ts",
+        action="store_true",
+        default=False,
+        dest="rtsp_ts",
+        help="Attach NTP timestamp from RTSP source",
     )
     # Check input arguments
-    if len(sys.argv)==1:
+    if len(sys.argv) == 1:
         parser.print_help(sys.stderr)
         sys.exit(1)
     args = parser.parse_args()
@@ -405,6 +434,19 @@ def parse_args():
     ts_from_rtsp = args.rtsp_ts
     return stream_path
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     stream_path = parse_args()
+    sys.stdout.write(f"[=] Input stream: {stream_path} \n\n")
     sys.exit(main(stream_path))
+
+"""
+python deepstream_test1_rtsp_in_rtsp_out.py \
+    -i rtsp://127.0.0.1:8554/stream/1 \
+    rtsp://127.0.0.1:8554/stream/2 \
+    rtsp://127.0.0.1:8554/stream/3
+
+
+    file:///home/good/wkspace/deepstream-sdk/ds8samples/streams/sample_1080p_h264_2.mp4 \
+    file:///home/good/wkspace/deepstream-sdk/ds8samples/streams/sample_1080p_h264_q20.mp4
+"""

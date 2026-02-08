@@ -31,7 +31,7 @@ infer_config {
       model_name: "Primary_Detector"
       version: -1
       model_repo {
-        root: "../../../../samples/triton_model_repo"
+        root: "/home/good/wkspace/deepstream-sdk/ds8samples/triton_model_repo"
         strict_model_config: true
       }
     }
@@ -49,7 +49,7 @@ infer_config {
     }
   }
   postprocess {
-    labelfile_path: "../../../../samples/models/Primary_Detector/labels.txt"
+    labelfile_path: "/home/good/wkspace/deepstream-sdk/ds8samples/models/Primary_Detector/labels.txt"
     detection {
       num_detected_classes: 4
       per_class_params {
