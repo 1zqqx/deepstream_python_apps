@@ -1,0 +1,6 @@
+[
+  { 
+    "video": "/data/sample_1080p_h264.mp4", 
+    "url": "rtsp://mediamtx:8554/stream/1" 
+  }
+]

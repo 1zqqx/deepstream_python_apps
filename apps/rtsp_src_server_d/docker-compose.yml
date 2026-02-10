@@ -1,0 +1,31 @@
+# MediaMTX 提供 RTSP 服务端；publisher 容器循环推流固定视频到 MediaMTX。
+# 拉流地址: rtsp://localhost:8554/stream
+
+services:
+  mediamtx:
+    image: bluenviron/mediamtx:latest
+    container_name: rtsp_src_mediamtx
+    restart: unless-stopped
+    ports:
+      - "8554:8554"   # RTSP
+      - "1935:1935"   # RTMP（可选）
+    # 默认配置即可接收推流，无需自定义 mediamtx.yml
+
+  publisher:
+    build: . # 用当前目录的 Dockerfile 构建
+    container_name: rtsp_src_publisher
+    restart: unless-stopped
+    # 用 watch(改代码/配置后自动重建并重启 publisher）:
+    # develop:
+    #   watch:
+    #     - path: .
+    #       action: rebuild
+    depends_on:
+      - mediamtx
+    environment:
+      VIDEO_PATH: /data/sample_1080p_h264.mp4
+      RTSP_PUBLISH_URL: rtsp://mediamtx:8554/stream # 单路流 使用
+    volumes:
+      # 将本地视频挂载到容器内；请把 your_video.mp4 换成实际文件或目录
+      - ./data.temp:/data:ro
+    # 若宿主机无 ./data/video.mp4，可改为挂载单文件: - /path/to/video.mp4:/data/video.mp4:ro
