@@ -8,3 +8,7 @@
 	path = bindings/3rdparty/gstreamer
 	url = https://github.com/GStreamer/gstreamer.git
 	sparse-checkout = subprojects/gst-python/
+[submodule "apps/dsapp"]
+	path = apps/dsapp
+	url = git@github.com:1zqqx/dsapp_pro.git
+	branch = main
