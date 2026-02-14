@@ -12,3 +12,7 @@
 	path = apps/dsapp
 	url = git@github.com:1zqqx/dsapp_pro.git
 	branch = main
+[submodule "insightface/scrfd"]
+	path = insightface/scrfd
+	url = git@github.com:1zqqx/scrfd2onnx.git
+	branch = main
