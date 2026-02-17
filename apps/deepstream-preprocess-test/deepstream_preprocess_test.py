@@ -20,8 +20,10 @@
 import sys
 
 sys.path.append("../")
+
 from common.bus_call import bus_call
 from common.platform_info import PlatformInfo
+
 import pyds
 import platform
 import math
@@ -31,7 +33,8 @@ import gi
 
 gi.require_version("Gst", "1.0")
 gi.require_version("GstRtspServer", "1.0")
-from gi.repository import Gst, GstRtspServer, GLib
+
+from gi.repository import Gst, GstRtspServer, GLib  # type: ignore
 import configparser
 
 import argparse
@@ -135,32 +138,34 @@ def pgie_src_pad_buffer_probe(pad, info, u_data):
             user_meta = pyds.NvDsUserMeta.cast(l_user_meta.data)
         except StopIteration:
             break
-        if (user_meta.base_meta.meta_type == pyds.NVDS_PREPROCESS_BATCH_META):
+        if user_meta.base_meta.meta_type == pyds.NVDS_PREPROCESS_BATCH_META:
             try:
                 # Casting user_meta.data to pyds.GstNvDsPreProcessBatchMeta
-                preprocess_batchmeta = pyds.GstNvDsPreProcessBatchMeta.cast(user_meta.user_meta_data)
+                preprocess_batchmeta = pyds.GstNvDsPreProcessBatchMeta.cast(
+                    user_meta.user_meta_data
+                )
             except StopIteration:
                 break
             roi_cnt = 0
-            
+
             for roi_meta in preprocess_batchmeta.roi_vector:
-                 # Label ROI in display
+                # Label ROI in display
                 display_meta = pyds.nvds_acquire_display_meta_from_pool(batch_meta)
                 display_meta.num_labels = 1
 
                 txt_params = display_meta.text_params[0]
                 txt_params.display_text = f"Roi:{roi_cnt}"
-                
+
                 txt_params.x_offset = int(roi_meta.roi.left)
                 txt_params.y_offset = int(roi_meta.roi.top)
-                
+
                 txt_params.font_params.font_name = "Serif"
                 txt_params.font_params.font_size = 10
                 txt_params.font_params.font_color.red = 1.0
                 txt_params.font_params.font_color.green = 1.0
                 txt_params.font_params.font_color.blue = 1.0
                 txt_params.font_params.font_color.alpha = 1.0
-                
+
                 txt_params.set_bg_clr = 1
                 txt_params.text_bg_clr.red = 0.0
                 txt_params.text_bg_clr.green = 0.0
@@ -168,14 +173,16 @@ def pgie_src_pad_buffer_probe(pad, info, u_data):
                 txt_params.text_bg_clr.alpha = 0.5
 
                 pyds.nvds_add_display_meta_to_frame(roi_meta.frame_meta, display_meta)
-                print(f"frame {roi_meta.frame_meta.frame_num} src {roi_meta.frame_meta.source_id} roi {roi_cnt}")
+                print(
+                    f"frame {roi_meta.frame_meta.frame_num} src {roi_meta.frame_meta.source_id} roi {roi_cnt}"
+                )
 
                 roi_cnt += 1
         try:
             l_user_meta = l_user_meta.next
         except StopIteration:
             break
-        
+
     return Gst.PadProbeReturn.OK
 
 
@@ -248,6 +255,7 @@ def create_source_bin(index, uri):
         return None
     return nbin
 
+
 def main(args):
     # Check input arguments
     global perf_data
@@ -290,6 +298,7 @@ def main(args):
         if not srcpad:
             sys.stderr.write("Unable to create src pad bin \n")
         srcpad.link(sinkpad)
+    # XXX nvdspreprocess
     preprocess = Gst.ElementFactory.make("nvdspreprocess", "preprocess-plugin")
     if not preprocess:
         sys.stderr.write(" Unable to create preprocess \n")
@@ -298,10 +307,12 @@ def main(args):
     if not pgie:
         sys.stderr.write(" Unable to create pgie \n")
     print("Creating tiler \n ")
+    # XXX nvmultistreamtiler
     tiler = Gst.ElementFactory.make("nvmultistreamtiler", "nvtiler")
     if not tiler:
         sys.stderr.write(" Unable to create tiler \n")
     print("Creating nvvidconv \n ")
+    # 1 -> nvvidconv
     nvvidconv = Gst.ElementFactory.make("nvvideoconvert", "convertor")
     if not nvvidconv:
         sys.stderr.write(" Unable to create nvvidconv \n")
@@ -309,6 +320,7 @@ def main(args):
     nvosd = Gst.ElementFactory.make("nvdsosd", "onscreendisplay")
     if not nvosd:
         sys.stderr.write(" Unable to create nvosd \n")
+    # 2 -> nvvidconv
     nvvidconv_postosd = Gst.ElementFactory.make("nvvideoconvert", "convertor_postosd")
     if not nvvidconv_postosd:
         sys.stderr.write(" Unable to create nvvidconv_postosd \n")
@@ -332,7 +344,7 @@ def main(args):
     if platform_info.is_integrated_gpu():
         encoder.set_property("preset-level", 1)
         encoder.set_property("insert-sps-pps", 1)
-        #encoder.set_property("bufapi-version", 1)
+        # encoder.set_property("bufapi-version", 1)
 
     # Make the payload-encode video into RTP packets
     if codec == "H264":
@@ -343,6 +355,8 @@ def main(args):
         print("Creating H265 rtppay")
     if not rtppay:
         sys.stderr.write(" Unable to create rtppay")
+    # XXX
+    rtppay.set_property("config-interval", 1)
 
     # Make the UDP sink
     updsink_port_num = 5400
@@ -350,16 +364,16 @@ def main(args):
     if not sink:
         sys.stderr.write(" Unable to create udpsink")
 
-    queue1=Gst.ElementFactory.make("queue","queue1")
-    queue2=Gst.ElementFactory.make("queue","queue2")
-    queue3=Gst.ElementFactory.make("queue","queue3")
-    queue4=Gst.ElementFactory.make("queue","queue4")
-    queue5=Gst.ElementFactory.make("queue","queue5")
-    queue6=Gst.ElementFactory.make("queue","queue6")
-    queue7=Gst.ElementFactory.make("queue","queue7")
-    queue8=Gst.ElementFactory.make("queue","queue8")
-    queue9=Gst.ElementFactory.make("queue","queue9")
-    queue10=Gst.ElementFactory.make("queue","queue10")
+    queue1 = Gst.ElementFactory.make("queue", "queue1")
+    queue2 = Gst.ElementFactory.make("queue", "queue2")
+    queue3 = Gst.ElementFactory.make("queue", "queue3")
+    queue4 = Gst.ElementFactory.make("queue", "queue4")
+    queue5 = Gst.ElementFactory.make("queue", "queue5")
+    queue6 = Gst.ElementFactory.make("queue", "queue6")
+    queue7 = Gst.ElementFactory.make("queue", "queue7")
+    queue8 = Gst.ElementFactory.make("queue", "queue8")
+    queue9 = Gst.ElementFactory.make("queue", "queue9")
+    queue10 = Gst.ElementFactory.make("queue", "queue10")
     pipeline.add(queue1)
     pipeline.add(queue2)
     pipeline.add(queue3)
@@ -380,6 +394,7 @@ def main(args):
     streammux.set_property("height", 1080)
     streammux.set_property("batch-size", number_sources)
     streammux.set_property("batched-push-timeout", MUXER_BATCH_TIMEOUT_USEC)
+    # XXX set preprocess config file
     preprocess.set_property("config-file", "config_preprocess.txt")
     pgie.set_property("config-file-path", "dstest1_pgie_config.txt")
 
@@ -458,13 +473,13 @@ def main(args):
     if not pgie_src_pad:
         sys.stderr.write(" Unable to get src pad \n")
     else:
-        pgie_src_pad.add_probe(
-            Gst.PadProbeType.BUFFER, pgie_src_pad_buffer_probe, 0
-        )
+        pgie_src_pad.add_probe(Gst.PadProbeType.BUFFER, pgie_src_pad_buffer_probe, 0)
         # perf callback function to print fps every 5 sec
         GLib.timeout_add(5000, perf_data.perf_print_callback)
 
-    print(f"\n *** DeepStream: Launched RTSP Streaming at rtsp://localhost:{rtsp_port_num}/ds-test ***\n\n")
+    print(
+        f"\n *** DeepStream: Launched RTSP Streaming at rtsp://localhost:{rtsp_port_num}/ds-test ***\n\n"
+    )
 
     # start play back and listen to events
     print("Starting pipeline \n")
@@ -514,3 +529,10 @@ def parse_args():
 if __name__ == "__main__":
     stream_path = parse_args()
     sys.exit(main(stream_path))
+
+"""
+python deepstream_preprocess_test.py \
+    -i file:///home/good/wkspace/deepstream-sdk/ds8samples/streams/sample_1080p_h264.mp4 \
+        file:///home/good/wkspace/deepstream-sdk/ds8samples/streams/sample_1080p_h264_2.mp4 \
+    -c H264
+"""

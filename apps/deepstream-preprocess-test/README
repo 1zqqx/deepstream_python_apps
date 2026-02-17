@@ -52,7 +52,7 @@ This document describes the sample deepstream_preprocess-test application
 * Prepares raw tensor for inferencing
 * nvinfer skips preprocessing and infer from input tensor meta
 
-Note : The current config file is configured to run 12 ROI at the most. To increase the ROI count, increase the first dimension to the required number `network-input-shape`=12;3;368;640. In the current config file `config-preprocess.txt`. there are 3 ROIs per source and hence a total of 12 ROI for all four sources. The total ROI from all the sources must not exceed the first dimension specified in `network-input-shape` param
+NOTE：当前的配置文件最多可设置 12 个感兴趣区域（ROI）。若要增加 ROI 的数量，请将第一个维度设置为所需的数值（例如 `network-input-shape`=12;3;368;640）。在当前的配置文件 `config-preprocess.txt` 中，每个源有 3 个 ROI，因此所有四个源的总 ROI 数量为 12 个。所有来源的总 ROI 数量必须不超过 `network-input-shape` 参数中指定的维度值。
 
 Refer to the deepstream-test3 sample documentation for an example of simple
 multi-stream inference, bounding-box overlay, and rendering.
@@ -61,10 +61,7 @@ This sample accepts one or more H.264/H.265 video streams as input. It creates
 a source bin for each input and connects the bins to an instance of the
 "nvstreammux" element, which forms the batch of frames. 
 
-Then, "nvdspreprocess" plugin preprocessed the batched frames and prepares a raw
-tensor for inferencing, which is attached as user meta at batch level. User can
-provide custom preprocessing library having custom per group transformation
-functions and custom tensor preparation function.
+然后，`nvdspreprocess`插件会对批次帧进行预处理，并为推理准备一个原始张量，该张量会以批次级别形式附加为用户元数据。用户可以提供自定义的预处理库，其中包含针对每个组的自定义转换函数以及自定义的张量准备函数。
 
 Then, "nvinfer" uses the preprocessed raw tensor from meta data for batched
 inferencing. The batched buffer is composited into a 2D tile array using
