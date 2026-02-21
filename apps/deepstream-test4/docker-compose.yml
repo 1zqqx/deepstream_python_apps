@@ -1,6 +1,7 @@
 version: "3.9"
 
-services:
+services: 
+  # redis server
   redis:
     image: redis:7.2.11-alpine
     container_name: redis_ds_t4
@@ -10,3 +11,16 @@ services:
     volumes:
       - /data/d_redis/ds_t4:/data
     command: ["redis-server", "--appendonly", "yes"]
+
+  # redis ui server
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: redis-ui
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+
+# docker compose -f docker... uo/down [-d]

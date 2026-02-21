@@ -54,6 +54,31 @@ MSCONV_CONFIG_FILE = "dstest4_msgconv_config.txt"
 pgie_classes_str = ["Vehicle", "TwoWheeler", "Person", "Roadsign"]
 
 
+# ------------------------------------------------------------------------------
+# qtdemux 的 pad-added 回调: MP4 解复用后会动态创建 video_0 等 pad
+# 需在此回调中将 qtdemux 的 video pad 连接到 h264parse
+# MP4 是容器格式, filesrc 输出容器字节流, h264parse 期望 H.264 裸流, 否则会 not-negotiated
+# ------------------------------------------------------------------------------
+def demux_pad_added_cb(demux_element, pad, h264parser):
+    pad_name = pad.get_name()
+    caps = pad.get_current_caps()
+    if not caps:
+        caps = pad.query_caps(None)
+
+    struct = caps.get_structure(0) if caps and caps.get_size() > 0 else None
+    name = struct.get_name() if struct else ""
+
+    if name.startswith("video/x-h264"):
+        print(f"===> QtDemux video pad added: {pad_name}, linking to h264parse\n")
+        sinkpad = h264parser.get_static_pad("sink")
+        if sinkpad and not sinkpad.is_linked():
+            pad.link(sinkpad)
+        elif sinkpad and sinkpad.is_linked():
+            sys.stderr.write("h264parse sink pad already linked\n")
+    elif name.startswith("audio"):
+        print("===> ignore audio pad\n")
+
+
 # custom object
 def generate_vehicle_meta(data):
     obj = pyds.NvDsVehicleObject.cast(data)
@@ -171,7 +196,7 @@ def osd_sink_pad_buffer_probe(pad, info, u_data):
             # Update the object text display
             txt_params = obj_meta.text_params
 
-            # Set display_text. Any existing display_text string will be
+            # XXX Set display_text. Any existing display_text string will be
             # freed by the bindings module.
             txt_params.display_text = pgie_classes_str[obj_meta.class_id]
 
@@ -179,12 +204,12 @@ def osd_sink_pad_buffer_probe(pad, info, u_data):
 
             # Font , font-color and font-size
             txt_params.font_params.font_name = "Serif"
-            txt_params.font_params.font_size = 10
+            txt_params.font_params.font_size = 14
             # set(red, green, blue, alpha); set to White
             txt_params.font_params.font_color.set(1.0, 1.0, 1.0, 1.0)
 
             # Text background color
-            txt_params.set_bg_clr = 1
+            txt_params.set_bg_clr = 0
             # set(red, green, blue, alpha); set to Black
             txt_params.text_bg_clr.set(0.0, 0.0, 0.0, 1.0)
 
@@ -219,6 +244,7 @@ def osd_sink_pad_buffer_probe(pad, info, u_data):
                 else:
                     print("Error in attaching event meta to buffer\n")
 
+                # NOTE 示例代码 仅对每帧的 第一个 object 生成 event msg meta
                 is_first_object = False
 
             try:
@@ -230,14 +256,16 @@ def osd_sink_pad_buffer_probe(pad, info, u_data):
         except StopIteration:
             break
 
-    print(
-        "Frame Number =",
-        frame_number,
-        "Vehicle Count =",
-        obj_counter[PGIE_CLASS_ID_VEHICLE],
-        "Person Count =",
-        obj_counter[PGIE_CLASS_ID_PERSON],
-    )
+    if frame_number % 30 == 0:
+        # NOTE 多个源这样控制有问题
+        print(
+            "Frame Number =",
+            frame_number,
+            "Vehicle Count =",
+            obj_counter[PGIE_CLASS_ID_VEHICLE],
+            "Person Count =",
+            obj_counter[PGIE_CLASS_ID_PERSON],
+        )
     return Gst.PadProbeReturn.OK
 
 
@@ -264,7 +292,15 @@ def main(args):
     if not source:
         sys.stderr.write(" Unable to create Source \n")
 
-    # qtdemux
+    # qtdemux: MP4/MOV 是容器格式, filesrc 输出容器字节流, 需先解复用再给 h264parse
+    # 否则 h264parse 收到 MP4 头部会报 not-negotiated
+    use_demux = input_file.lower().endswith((".mp4", ".mov", ".m4v"))
+    demux = None
+    if use_demux:
+        print("===> Creating QtDemux (MP4/MOV container) \n")
+        demux = Gst.ElementFactory.make("qtdemux", "qt-demux")
+        if not demux:
+            sys.stderr.write(" Unable to create qtdemux \n")
 
     print("===> Creating H264Parser \n")
     h264parser = Gst.ElementFactory.make("h264parse", "h264-parser")
@@ -292,12 +328,12 @@ def main(args):
     if not nvosd:
         sys.stderr.write(" Unable to create nvosd \n")
 
-    # Transforms buffer meta to schema / payload meta
+    # XXX Transforms buffer meta to schema / payload meta
     msgconv = Gst.ElementFactory.make("nvmsgconv", "nvmsg-converter")
     if not msgconv:
         sys.stderr.write(" Unable to create msgconv \n")
 
-    # Sends payload metadata to remote server
+    # XXX Sends payload metadata to remote server
     msgbroker = Gst.ElementFactory.make("nvmsgbroker", "nvmsg-broker")
     if not msgbroker:
         sys.stderr.write(" Unable to create msgbroker \n")
@@ -345,6 +381,7 @@ def main(args):
 
     pgie.set_property("config-file-path", PGIE_CONFIG_FILE)
 
+    # XXX set config
     msgconv.set_property("config", MSCONV_CONFIG_FILE)
     msgconv.set_property("payload-type", schema_type)
     msgbroker.set_property("proto-lib", proto_lib)
@@ -357,6 +394,8 @@ def main(args):
 
     print("===> Adding elements to Pipeline \n")
     pipeline.add(source)
+    if demux:
+        pipeline.add(demux)
     pipeline.add(h264parser)
     pipeline.add(decoder)
     pipeline.add(streammux)
@@ -370,8 +409,13 @@ def main(args):
     pipeline.add(msgbroker)
     pipeline.add(sink)
 
+    # MP4: source -> qtdemux -(pad-added)-> h264parse; 裸流: source -> h264parse
     print("===> Linking elements in the Pipeline \n")
-    source.link(h264parser)
+    if demux:
+        demux.connect("pad-added", demux_pad_added_cb, h264parser)
+        source.link(demux)
+    else:
+        source.link(h264parser)
     h264parser.link(decoder)
 
     sinkpad = streammux.request_pad_simple("sink_0")
@@ -523,22 +567,17 @@ if __name__ == "__main__":
 
 """
 python deepstream_test_4.py \
-    -c /home/good/wkspace/deepstream-sdk/deepstream_python_apps/apps/deepstream-test4/cfg_redis.txt \
+    -c cfg_redis.txt \
     -i /home/good/wkspace/deepstream-sdk/ds8samples/streams/sample_1080p_h264.mp4 \
     -p /opt/nvidia/deepstream/deepstream/lib/libnvds_redis_proto.so \
-    --conn-str="127.0.0.1;6379"
+    -t redis_topic \
+    -s 1 \
+    --conn-str="127.0.0.1;6399"
 
--c cfg_redis.txt        # for redis
--p /opt/nvidia/deepstream/deepstream/lib/libnvds_redis_proto.so
--t topic                # Only kafka needs it
+-t topic                # Only kafka needs it -> no
 -s 0 or 1 -> readme
---conn-str "127.0.0.1;6379"
+--conn-str "127.0.0.1;6399"  # Docker: 宿主机端口 6399 -> 容器 6379
 --no-display to disable display.
-"""
-
-"""
-Error: gst-library-error-quark: Could not configure supporting library. (5): gstnvmsgbroker.cpp(439): legacy_gst_nvmsgbroker_start (): /GstPipeline:pipeline0/GstNvMsgBroker:nvmsg-broker:
-unable to connect to broker library
 """
 
 # TODO: 标记代码中需要实现的功能或任务
@@ -547,3 +586,73 @@ unable to connect to broker library
 # BUG: 标记已知的Bug或错误
 # XXX: 标记需要警惕或需要重点关注的代码块
 # HACK: 标记临时性修复或不优雅的解决方案
+
+"""
+# full message
+{
+    "messageid": "75205036-04f0-4147-9ebd-6045b4f3ec24",
+    "mdsversion": "1.0",
+    "@timestamp": "2026-02-21T03:26:33.414Z",
+    "place": {
+        "id": "1",
+        "name": "XYZ",
+        "type": "garage",
+        "location": {"lat": 30.32, "lon": -40.55, "alt": 100},
+        "entrance": {
+            "name": "walsh",
+            "lane": "lane1",
+            "level": "P2",
+            "coordinate": {"x": 1, "y": 2, "z": 3},
+        },
+    },
+    "sensor": {
+        "id": "CAMERA_ID",
+        "type": "Camera",
+        "description": '\\"Entrance of Garage Right Lane\\"',
+        "location": {"lat": 45.293701447, "lon": -75.8303914499, "alt": 48.1557479338},
+        "coordinate": {"x": 5.2, "y": 10.1, "z": 11.2},
+    },
+    "analyticsModule": {
+        "id": "XYZ",
+        "description": '\\"Vehicle Detection and License Plate Recognition\\"',
+        "source": "OpenALR",
+        "version": "1.0",
+    },
+    "object": {
+        "id": "18446744073709551615",
+        "speed": 0,
+        "direction": 0,
+        "orientation": 0,
+        "person": {
+            "age": 45,
+            "gender": "male",
+            "hair": "black",
+            "cap": "none",
+            "apparel": "formal",
+            "confidence": 0.499267578125,
+        },
+        "bbox": {
+            "topleftx": 123,
+            "toplefty": 485,
+            "bottomrightx": 204,
+            "bottomrighty": 765,
+        },
+        "location": {"lat": 0, "lon": 0, "alt": 0},
+        "coordinate": {"x": 0, "y": 0, "z": 0},
+        "pose": {},
+    },
+    "event": {"id": "c471e8f5-7acd-4daf-8067-aa2b82d93331", "type": "entry"},
+    "videoPath": "",
+}
+# minimal message
+{
+    "version": "4.0",
+    "id": "0",
+    "@timestamp": "2026-02-21T07:29:03.166Z",
+    "sensorId": "sensor-0",
+    "objects": [
+        "18446744073709551615|123.095|485.434|204.537|765.614|Person|#|male|45|black|none|formal|0.499268"
+        # id                 |     bbox position             |classify|    | people info...
+    ],
+}
+"""
