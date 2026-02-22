@@ -103,6 +103,10 @@ def generate_person_meta(data):
 
 # how to attach custom objects
 def generate_event_msg_meta(data, class_id):
+    # msg_meta = pyds.alloc_nvds_event_msg_meta(user_event_meta)
+    # msg_meta = generate_event_msg_meta(msg_meta, obj_meta.class_id)
+    # meta = pyds.NvDsEventMsgMeta.cast(data)
+    # meta: NvDsEventMsgMeta
     meta = pyds.NvDsEventMsgMeta.cast(data)
     meta.sensorId = 0
     meta.placeId = 0
