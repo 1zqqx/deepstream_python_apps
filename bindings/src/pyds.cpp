@@ -1,6 +1,6 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2019-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- * SPDX-License-Identifier: Apache-2.0
+ * SPDX-FileCopyrightText: Copyright (c) 2019-2025 NVIDIA CORPORATION & AFFILIATES. All rights
+ * reserved. SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+#include "pyds.hpp"
 
 #include "bindanalyticsmeta.hpp"
 #include "bindfunctions.hpp"
@@ -25,13 +26,12 @@
 #include "bindnvdsmeta.hpp"
 #include "bindnvosd.hpp"
 #include "bindopticalflow.hpp"
+#include "bindpreprocessmeta.hpp"
+#include "bindroimeta.hpp"
 #include "bindschema.hpp"
 #include "bindtrackermeta.hpp"
 #include "custom_binding/include/bindcustom.hpp"
-#include "bindpreprocessmeta.hpp"
-#include "bindroimeta.hpp"
-
-#include "pyds.hpp"
+#include "custom_binding/include/ctmeta_binding.hpp"
 
 /*#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
@@ -44,32 +44,34 @@ namespace py = pybind11;
 
 namespace pydeepstream {
 
-    PYBIND11_MODULE(pyds, m) {
-        m.doc() = "pybind11 bindings for gstnvdsmeta"; /* this will be the doc string*/
-        m.attr("__version__") = PYDS_VERSION;
+PYBIND11_MODULE(pyds, m) {
+    m.doc() = "pybind11 bindings for gstnvdsmeta"; /* this will be the doc string*/
+    m.attr("__version__") = PYDS_VERSION;
 
-        py::class_<GList>(m, "GList")
-                .def(py::init<>())
-                .def_readwrite("data", &GList::data)
-                .def_readwrite("next", &GList::next)
-                .def_readwrite("prev", &GList::prev);
+    py::class_<GList>(m, "GList")
+        .def(py::init<>())
+        .def_readwrite("data", &GList::data)
+        .def_readwrite("next", &GList::next)
+        .def_readwrite("prev", &GList::prev);
 
-        bindnvosd(m);
-        bindnvdsmeta(m);
-        bindschema(m);
-        bindfunctions(m);
-        bindtrackermeta(m);
-        bindmeta360(m);
-        bindanalyticsmeta(m);
-        bindgstnvdsmeta(m);
-        bindnvbufsurface(m);
-        bindnvdsinfer(m);
-        bindopticalflowmeta(m);
-        bindutils(m);
-        bindcustom(m);
-        bindpreprocessmeta(m);
-        bindroimeta(m);
-    }   // end PYBIND11_MODULE(pyds, m)
-}
+    bindnvosd(m);
+    bindnvdsmeta(m);
+    bindschema(m);
+    bindfunctions(m);
+    bindtrackermeta(m);
+    bindmeta360(m);
+    bindanalyticsmeta(m);
+    bindgstnvdsmeta(m);
+    bindnvbufsurface(m);
+    bindnvdsinfer(m);
+    bindopticalflowmeta(m);
+    bindutils(m);
 
+    // register
+    pydeepstream::bindcustom(m);
+    pyds_usbcamera_test::ct_face_obj_bind(m);
 
+    bindpreprocessmeta(m);
+    bindroimeta(m);
+}  // end PYBIND11_MODULE(pyds, m)
+}  // namespace pydeepstream
