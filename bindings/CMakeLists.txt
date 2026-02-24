@@ -76,6 +76,7 @@ add_library(pyds SHARED src/pyds.cpp src/utils.cpp src/bindanalyticsmeta.cpp
             src/bindnvdsmeta.cpp src/bindnvosd.cpp src/bindopticalflow.cpp
             src/bindschema.cpp src/bindtrackermeta.cpp src/custom_binding/bindcustom.cpp
             src/custom_binding/ctmeta_binding.cpp
+            src/custom_binding/bind_custom_msg_blob.cpp
             src/bindpreprocessmeta.cpp src/bindroimeta.cpp)
 
 set_target_properties(pyds PROPERTIES PREFIX "")

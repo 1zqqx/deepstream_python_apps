@@ -30,6 +30,7 @@
 #include "bindroimeta.hpp"
 #include "bindschema.hpp"
 #include "bindtrackermeta.hpp"
+#include "custom_binding/include/bind_custom_msg_blob.hpp"
 #include "custom_binding/include/bindcustom.hpp"
 #include "custom_binding/include/ctmeta_binding.hpp"
 
@@ -70,6 +71,7 @@ PYBIND11_MODULE(pyds, m) {
     // register
     pydeepstream::bindcustom(m);
     pyds_usbcamera_test::ct_face_obj_bind(m);
+    pydeepstream::bind_custom_msg_blob(m);
 
     bindpreprocessmeta(m);
     bindroimeta(m);
