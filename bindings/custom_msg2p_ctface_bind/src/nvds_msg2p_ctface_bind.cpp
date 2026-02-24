@@ -93,16 +93,20 @@ NvDsMsg2pCtx* nvds_msg2p_ctx_create(const gchar* config_file, NvDsPayloadType ty
 }
 
 /* Returns one NvDsPayload containing a JSON array of all CTFaceObjectMeta.
- * Only uses frame_user_meta_list: when size==1, events is interpreted as
- * NvDsBatchMeta* and we collect from frame_user_meta_list (no NvDsEventMsgMeta). */
+ * When size>=1 the plugin passes NvDsEvent[]; we get NvDsBatchMeta* from
+ * events[0].metadata (NvDsEventMsgMeta*)->extMsg (8-byte batch pointer set by
+ * Python via nvds_event_msg_meta_set_batch_pointer), then collect from
+ * frame_user_meta_list. */
 NvDsPayload* nvds_msg2p_generate(NvDsMsg2pCtx* ctx, NvDsEvent* events, guint size) {
     (void)ctx;
     std::vector<std::string> jsons;
 
-    if (events && size == 1) {
-        NvDsBatchMeta* batch = reinterpret_cast<NvDsBatchMeta*>(events);
-        if (batch && batch->frame_meta_list)
-            collect_from_batch_meta(batch, &jsons);
+    if (events && size >= 1) {
+        NvDsEventMsgMeta* msg_meta = static_cast<NvDsEventMsgMeta*>(events[0].metadata);
+        if (msg_meta && msg_meta->extMsgSize == 8 && msg_meta->extMsg) {
+            NvDsBatchMeta* batch = *reinterpret_cast<NvDsBatchMeta**>(msg_meta->extMsg);
+            if (batch && batch->frame_meta_list) collect_from_batch_meta(batch, &jsons);
+        }
     }
 
     if (jsons.empty()) return nullptr;

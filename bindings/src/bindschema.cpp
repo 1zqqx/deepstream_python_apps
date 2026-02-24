@@ -17,6 +17,8 @@
 
 // NvDsMetaSchema
 
+#include <cstring>
+
 #include "bind_string_property_definitions.h"
 #include "bindschema.hpp"
 
@@ -65,7 +67,12 @@ namespace pydeepstream {
         }
 
         if (srcData->extMsgSize > 0) {
-            if (srcData->objType == NVDS_OBJECT_TYPE_VEHICLE) {
+            if (srcData->extMsgSize == 8) {
+                /* Batch pointer for custom msg2p (CT face): copy 8-byte pointer. */
+                destData->extMsg = g_malloc(8);
+                memcpy(destData->extMsg, srcData->extMsg, 8);
+                destData->extMsgSize = 8;
+            } else if (srcData->objType == NVDS_OBJECT_TYPE_VEHICLE) {
                 NvDsVehicleObject *srcObj = (NvDsVehicleObject *) srcData->extMsg;
                 NvDsVehicleObject *obj =
                         (NvDsVehicleObject *) g_malloc0 (sizeof (NvDsVehicleObject));
@@ -132,7 +139,9 @@ namespace pydeepstream {
                 }
 
                 if (srcData->extMsgSize > 0) {
-                    if (srcData->objType == NVDS_OBJECT_TYPE_VEHICLE) {
+                    if (srcData->extMsgSize == 8) {
+                        /* Batch pointer: only g_free, no inner fields. */
+                    } else if (srcData->objType == NVDS_OBJECT_TYPE_VEHICLE) {
                         NvDsVehicleObject *obj = (NvDsVehicleObject *) srcData->extMsg;
                         if (obj->type)
                             g_free (obj->type);
@@ -575,6 +584,19 @@ namespace pydeepstream {
               py::return_value_policy::reference,
               pydsdoc::methodsDoc::alloc_nvds_event_msg_meta);
 
+        /** Set NvDsEventMsgMeta extMsg to the batch_meta pointer (8 bytes).
+         * Used so custom msg2p lib can read batch from events[0].metadata->extMsg. */
+        m.def("nvds_event_msg_meta_set_batch_pointer",
+              [](NvDsEventMsgMeta *meta, NvDsBatchMeta *batch) {
+                  if (meta && batch) {
+                      if (meta->extMsgSize > 0 && meta->extMsg)
+                          g_free(meta->extMsg);
+                      meta->extMsg = g_malloc(8);
+                      memcpy(meta->extMsg, &batch, sizeof(void *));
+                      meta->extMsgSize = 8;
+                  }
+              },
+              "event_msg_meta"_a, "batch_meta"_a);
 
         m.def("generate_ts_rfc3339",
               [](size_t buffer, size_t size) {
