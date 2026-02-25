@@ -57,11 +57,12 @@ void bind_custom_msg_blob(py::module& m) {
             NvDsCustomMsgInfoCompat* info =
                 (NvDsCustomMsgInfoCompat*)g_malloc(sizeof(NvDsCustomMsgInfoCompat));
             info->message = g_strdup(json_str.c_str());
-            info->len = (guint)(json_str.size() + 1);
+            /* SDK dsmeta_payload uses custom_blob->size as string length (no null); match test4. */
+            info->len = (guint)json_str.size();
             user_meta->user_meta_data = info;
-            user_meta->base_meta.meta_type =
-                (NvDsMetaType)(g_quark_from_string((gchar*)"NVDS_CUSTOM_MSG_BLOB") +
-                               NVDS_START_USER_META);
+            /* SDK payload lib (msg2p-newapi) checks meta_type == NVDS_CUSTOM_MSG_BLOB;
+             * must use the enum from nvdsmeta.h, not a quark. */
+            user_meta->base_meta.meta_type = NVDS_CUSTOM_MSG_BLOB;
             user_meta->base_meta.copy_func = (NvDsMetaCopyFunc)custom_msg_blob_copy_func;
             user_meta->base_meta.release_func = (NvDsMetaReleaseFunc)custom_msg_blob_release_func;
             nvds_add_user_meta_to_frame(frame_meta, user_meta);
