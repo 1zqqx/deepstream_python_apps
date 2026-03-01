@@ -1,5 +1,10 @@
 # MediaMTX 提供 RTSP 服务端；publisher 容器循环推流固定视频到 MediaMTX。
 # 拉流地址: rtsp://localhost:8554/stream
+#
+# 选择视频流（无需重新构建镜像）：
+# 1) 推荐：挂载 streams.json，改好流配置后直接 docker compose up -d（或 restart publisher）
+# 2) 单路：设置 VIDEO_PATH、RTSP_PUBLISH_URL 并取消下方 command 注释，用环境变量指定
+# 3) 多路且不挂载文件：设置 STREAMS_JSON 环境变量（JSON 数组字符串）并取消 command 注释
 
 services:
   mediamtx:
@@ -12,20 +17,21 @@ services:
     # 默认配置即可接收推流，无需自定义 mediamtx.yml
 
   publisher:
-    build: . # 用当前目录的 Dockerfile 构建
+    build: . # 首次构建后，换视频只需改 streams.json 或环境变量并 restart，不必再 build
+    image: rtsp_src_publisher:latest  # 固定镜像名，避免重复构建
     container_name: rtsp_src_publisher
     restart: unless-stopped
-    # 用 watch(改代码/配置后自动重建并重启 publisher）:
-    # develop:
-    #   watch:
-    #     - path: .
-    #       action: rebuild
     depends_on:
       - mediamtx
     environment:
       VIDEO_PATH: /data/sample_1080p_h264.mp4
-      RTSP_PUBLISH_URL: rtsp://mediamtx:8554/stream # 单路流 使用
+      RTSP_PUBLISH_URL: rtsp://mediamtx:8554/stream
+      # 多路且不挂载 streams.json 时，可设 STREAMS_JSON（同 streams.json 内容的字符串）
+      # STREAMS_JSON: '[{"video":"/data/cam1.mp4","url":"rtsp://mediamtx:8554/cam1"}]'
     volumes:
-      # 将本地视频挂载到容器内；请把 your_video.mp4 换成实际文件或目录
+      # 视频目录：宿主机放好 mp4，容器内路径为 /data/xxx.mp4
       - ./data.temp:/data:ro
-    # 若宿主机无 ./data/video.mp4，可改为挂载单文件: - /path/to/video.mp4:/data/video.mp4:ro
+      # 挂载 streams.json：改本机 streams.json 后 restart publisher 即可换流，无需 rebuild
+      - ./streams.json:/app/streams.json:ro
+    # 使用环境变量单路/多路时取消下一行注释，并注释掉上面 volumes 中的 streams.json 挂载
+    # command: ["python", "main.py"]

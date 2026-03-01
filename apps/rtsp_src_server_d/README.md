@@ -17,8 +17,18 @@
 
 ```bash
 cd apps/rtsp_src_server_d
+# 首次需要构建
+docker compose build
 docker compose up -d
 ```
+
+**换视频流且不重新构建镜像**：`docker-compose.yml` 已挂载 `./streams.json`。只需编辑本机 `streams.json` 指定要推的视频路径和 RTSP URL，然后执行：
+
+```bash
+docker compose restart publisher
+```
+
+或 `docker compose up -d`（会重启有变化的服务）。无需再次 `docker compose build`。
 
 拉流地址（在宿主机或同一网络）：
 
@@ -67,7 +77,9 @@ docker compose -f docker-compose.yml up/down [-d]
 
 **方式三：环境变量 `STREAMS_JSON`**
 
-在 docker-compose 中可为 `publisher` 设置环境变量 `STREAMS_JSON` 为上述 JSON 数组的字符串（便于多路且不挂载配置文件）。
+在 docker-compose 中可为 `publisher` 设置环境变量 `STREAMS_JSON` 为上述 JSON 数组的字符串（便于多路且不挂载配置文件）。此时需在 docker-compose 中覆盖启动命令为 `command: ["python", "main.py"]`，不传 `--config`，程序会从环境变量读取。
+
+**单路仅用环境变量**：设置 `VIDEO_PATH`、`RTSP_PUBLISH_URL` 并设置 `command: ["python", "main.py"]`，不挂载 `streams.json` 即可；换视频只改环境变量并 `docker compose up -d`，无需重建镜像。
 
 ## 仅本地跑 Python（不跑 Docker）
 

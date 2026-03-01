@@ -1,6 +1,6 @@
 [
   { 
-    "video": "/data/sample_1080p_h264.mp4", 
+    "video": "/data/2025-12-06_12.36_1min.mp4", 
     "url": "rtsp://mediamtx:8554/stream/1" 
   }
 ]
