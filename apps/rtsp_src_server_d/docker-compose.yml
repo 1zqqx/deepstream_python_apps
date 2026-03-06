@@ -10,17 +10,17 @@ services:
   mediamtx:
     image: bluenviron/mediamtx:latest
     container_name: rtsp_src_mediamtx
-    restart: unless-stopped
+    restart: "no"   # 不自动重启，开机不自动启动；需手动 docker compose up
     ports:
-      - "8554:8554"   # RTSP
-      - "1935:1935"   # RTMP（可选）
+      - "10010:8554"   # RTSP
+      - "10011:1935"   # RTMP（可选）
     # 默认配置即可接收推流，无需自定义 mediamtx.yml
 
   publisher:
     build: . # 首次构建后，换视频只需改 streams.json 或环境变量并 restart，不必再 build
     image: rtsp_src_publisher:latest  # 固定镜像名，避免重复构建
     container_name: rtsp_src_publisher
-    restart: unless-stopped
+    restart: "no"   # 不自动重启，开机不自动启动；需手动 docker compose up
     depends_on:
       - mediamtx
     environment:
