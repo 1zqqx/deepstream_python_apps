@@ -1,0 +1,67 @@
+Factory Details:
+  Rank                     none (0)
+  Long-name                Valve element
+  Klass                    Filter
+  Description              Drops buffers and events or lets them through
+  Author                   Olivier Crete <olivier.crete@collabora.co.uk>
+  Documentation            https://gstreamer.freedesktop.org/documentation/coreelements/valve.html
+
+Plugin Details:
+  Name                     coreelements
+  Description              GStreamer core elements
+  Filename                 /usr/lib/x86_64-linux-gnu/gstreamer-1.0/libgstcoreelements.so
+  Version                  1.24.2
+  License                  LGPL
+  Source module            gstreamer
+  Documentation            https://gstreamer.freedesktop.org/documentation/coreelements/
+  Source release date      2024-04-09
+  Binary package           GStreamer (Ubuntu)
+  Origin URL               https://launchpad.net/ubuntu/+source/gstreamer1.0
+
+GObject
+ +----GInitiallyUnowned
+       +----GstObject
+             +----GstElement
+                   +----GstValve
+
+Pad Templates:
+  SINK template: 'sink'
+    Availability: Always
+    Capabilities:
+      ANY
+  
+  SRC template: 'src'
+    Availability: Always
+    Capabilities:
+      ANY
+
+Element has no clocking capabilities.
+Element has no URI handling capabilities.
+
+Pads:
+  SRC: 'src'
+    Pad Template: 'src'
+  SINK: 'sink'
+    Pad Template: 'sink'
+
+Element Properties:
+
+  drop                : Whether to drop buffers and events or let them through
+                        flags: 可读, 可写, 可以在NULL、READY、PAUSED或PLAYING状态下改变
+                        Boolean. Default: false
+  
+  drop-mode           : The drop mode to use
+                        flags: 可读, 可写, 只能在NULL、或READY状态下改变
+                        Enum "GstValveDropMode" Default: 0, "drop-all"
+                           (0): drop-all         - Drop all buffers and events
+                           (1): forward-sticky-events - Drop all buffers but forward sticky events
+                           (2): transform-to-gap - Convert all dropped buffers into gap events and forward sticky events
+  
+  name                : The name of the object
+                        flags: 可读, 可写
+                        String. Default: "valve0"
+  
+  parent              : The parent of the object
+                        flags: 可读, 可写
+                        Object of type "GstObject"
+  
